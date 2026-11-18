@@ -1,0 +1,37 @@
+name: Compare community rule catalogs
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '43 1 * * *'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Compare verified Git tree entries
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOHO_CATALOG_GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          last="$(gh run list --workflow community-catalog.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')"
+          args=()
+          if [ -n "$last" ]; then
+            gh run download "$last" --name community-catalog --dir "$RUNNER_TEMP/previous"
+            args=(--previous "$RUNNER_TEMP/previous/catalog.json")
+          fi
+          python -B tools/community_catalog.py --output "$RUNNER_TEMP/current" "${args[@]}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: community-catalog
+          path: ${{ runner.temp }}/current

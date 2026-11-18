@@ -18,8 +18,9 @@ from build_configs import PAGES
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = {".gitignore", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "CONTRIBUTING.md", "SECURITY.md"}
 OTHER_FILES = {
-    ".github/workflows/check-and-publish.yml", "rules/policy.json", "tools/build_configs.py",
-    "tools/build_rule_data.py", "tools/check_release.py",
+    ".github/workflows/check-and-publish.yml", ".github/workflows/community-catalog.yml",
+    "rules/policy.json", "rules/community_sources.json", "tools/build_configs.py",
+    "tools/build_rule_data.py", "tools/check_release.py", "tools/community_catalog.py",
 }
 ASSETS = {
     "LICENSE", "THIRD_PARTY_NOTICES.md", "SOURCE.md", "SHA256.json",
@@ -33,7 +34,7 @@ MIT_NOTICE_SHA256 = {
     "35f18e0331a1ecd1835400c50e3b367c2ce09f6c13d91c4a0f3cb11f71d3bbc3",  # Loyalsoldier
 }
 HOSTS = {
-    "github.com", "raw.githubusercontent.com", "sam-lumina.github.io", "polyformproject.org",
+    "github.com", "api.github.com", "raw.githubusercontent.com", "sam-lumina.github.io", "polyformproject.org",
     "www.gnu.org", "gnu.org", "fsf.org", "www.fsf.org", "www.clashverge.dev", "apps.apple.com",
     "wiki.metacubex.one", "docs.github.com", "example.com",
 }

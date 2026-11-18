@@ -1,0 +1,72 @@
+[
+  {
+    "repo": "MetaCubeX/meta-rules-dat",
+    "branch": "meta",
+    "directory": "geo/geosite",
+    "file_pattern": "([^/]+)\\.list",
+    "role": "rules"
+  },
+  {
+    "repo": "v2fly/domain-list-community",
+    "branch": "master",
+    "directory": "data",
+    "file_pattern": "([^/]+)",
+    "role": "data-source"
+  },
+  {
+    "repo": "blackmatrix7/ios_rule_script",
+    "branch": "master",
+    "directory": "rule/Shadowrocket",
+    "file_pattern": "([^/]+)/\\1\\.list",
+    "role": "comparison"
+  },
+  {
+    "repo": "Hawaiine/mihomo-rules",
+    "branch": "main",
+    "directory": "ruleset",
+    "file_pattern": "(?:[^/]+/)*([^/]+)\\.yaml",
+    "role": "comparison"
+  },
+  {
+    "repo": "ACL4SSR/ACL4SSR",
+    "branch": "master",
+    "directory": "Clash/Ruleset",
+    "file_pattern": "([^/]+)\\.list",
+    "role": "rules"
+  },
+  {
+    "repo": "Repcz/Tool",
+    "branch": "X",
+    "directory": "Shadowrocket/Rules",
+    "file_pattern": "([^/]+)\\.list",
+    "role": "rules"
+  },
+  {
+    "repo": "SukkaW/Surge",
+    "branch": "master",
+    "directory": "Source",
+    "file_pattern": "(?:domainset|non_ip)/([^/]+)\\.(?:conf|txt)",
+    "role": "rules"
+  },
+  {
+    "repo": "Loyalsoldier/clash-rules",
+    "branch": "release",
+    "directory": "",
+    "file_pattern": "([^/]+)\\.txt",
+    "role": "rules"
+  },
+  {
+    "repo": "Johnshall/Shadowrocket-ADBlock-Rules-Forever",
+    "branch": "release",
+    "directory": "",
+    "file_pattern": "([^/]+)\\.conf",
+    "role": "template"
+  },
+  {
+    "repo": "poohyeban/shadowrocket-rules",
+    "branch": "main",
+    "directory": "rules",
+    "file_pattern": "([^/]+)/\\1\\.list",
+    "role": "rules"
+  }
+]
