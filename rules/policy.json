@@ -16,6 +16,19 @@
       "meta_path": "geo/geosite/category-ads.mrs"
     },
     {
+      "source": "soho-gambling",
+      "policy": "reject",
+      "kind": "domain",
+      "text_url": "https://sam-lumina.github.io/soho-network-rules/data/community-v1/gambling.list",
+      "hagezi_path": "wildcard/gambling.txt"
+    },
+    {
+      "source": "soho-adult",
+      "policy": "proxy_category",
+      "kind": "domain",
+      "meta_path": "geo/geosite/category-porn.mrs"
+    },
+    {
       "source": "soho-openai",
       "policy": "proxy",
       "kind": "domain",

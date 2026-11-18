@@ -35,6 +35,23 @@ rule-providers:
     proxy: PROXY
     interval: 86400
     path-in-bundle: geo/geosite/category-ads.mrs
+  soho-gambling:
+    type: http
+    behavior: classical
+    format: text
+    path: ./rule-providers/soho-public/gambling.list
+    url: https://sam-lumina.github.io/soho-network-rules/data/community-v1/gambling.list
+    proxy: PROXY
+    interval: 86400
+  soho-adult:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/adult.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-porn.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/category-porn.mrs
   soho-openai:
     type: http
     behavior: domain
@@ -279,6 +296,7 @@ rule-providers:
 rules:
 - RULE-SET,soho-threat,REJECT
 - RULE-SET,soho-ads,REJECT
+- RULE-SET,soho-gambling,REJECT
 - AND,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\ChatGPT\.exe$),(OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
 - AND,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\resources\\codex\.exe$),(OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
 - PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[^\\]+\\,REJECT
@@ -291,6 +309,8 @@ rules:
 - DOMAIN-SUFFIX,linkedin.cn,DIRECT
 - OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube),(RULE-SET,soho-telegram),(RULE-SET,soho-twitter),(RULE-SET,soho-google),(RULE-SET,soho-linkedin),(RULE-SET,soho-whatsapp),(RULE-SET,soho-anthropic),(RULE-SET,soho-xai)),PROXY
 - OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube),(RULE-SET,soho-telegram),(RULE-SET,soho-twitter),(RULE-SET,soho-google),(RULE-SET,soho-linkedin),(RULE-SET,soho-whatsapp),(RULE-SET,soho-anthropic),(RULE-SET,soho-xai)),REJECT
+- RULE-SET,soho-adult,PROXY
+- RULE-SET,soho-adult,REJECT
 - RULE-SET,soho-microsoft,DIRECT
 - RULE-SET,soho-cn,DIRECT
 - RULE-SET,soho-geoip-cn,DIRECT,no-resolve

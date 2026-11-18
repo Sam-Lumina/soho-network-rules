@@ -19,12 +19,12 @@ LABEL = r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
 DOMAIN = re.compile(rf"(?:{LABEL}\.)*{LABEL}")
 
 
-def download(url):
+def download(url, limit=8_000_000):
     with urlopen(url, timeout=30) as response:
         if response.url != url:
             raise ValueError("Unexpected redirect for a pinned rule file")
-        data = response.read(8_000_001)
-    if not data or len(data) > 8_000_000:
+        data = response.read(limit + 1)
+    if not data or len(data) > limit:
         raise ValueError("Unexpected source file size")
     return data
 

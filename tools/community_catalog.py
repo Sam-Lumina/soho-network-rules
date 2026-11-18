@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 GITHUB = "https://api.github.com"
 ALIASES = {
     "abematv": "abema",
+    "category-porn": "adult",
     "china": "cn",
     "claude": "anthropic",
     "claudeai": "anthropic",
@@ -88,7 +89,8 @@ def category_key(label):
 
 
 def reviewed_routes(policy):
-    actions = {"direct": "DIRECT", "proxy": "PROXY", "proxy_supplement": "PROXY", "reject": "REJECT"}
+    actions = {"direct": "DIRECT", "proxy": "PROXY", "proxy_supplement": "PROXY",
+               "proxy_category": "PROXY", "reject": "REJECT"}
     routes = {}
     for entry in policy["sets"]:
         source_path = entry.get("meta_path") or entry.get("text_url")

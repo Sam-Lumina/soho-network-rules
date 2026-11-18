@@ -58,12 +58,16 @@ jobs:
                 exit 0
               fi
             done
-            curl --fail --silent --show-error --proto '=https' -H 'Cache-Control: no-cache' \
-              "$base/data/community-v1/media.list" -o "$RUNNER_TEMP/live-media.list"
             python -B tools/build_community_data.py
             python -B tools/check_release.py
-            if cmp --silent "$RUNNER_TEMP/live-media.list" dist/data/community-v1/media.list; then
-              echo "Community media data is current."
+            changed=0
+            for name in media.list adult.list gambling.list; do
+              curl --fail --silent --show-error --proto '=https' -H 'Cache-Control: no-cache' \
+                "$base/data/community-v1/$name" -o "$RUNNER_TEMP/$name"
+              cmp --silent "$RUNNER_TEMP/$name" "dist/data/community-v1/$name" || changed=1
+            done
+            if [ "$changed" = "0" ]; then
+              echo "Community rule data is current."
               exit 0
             fi
           fi

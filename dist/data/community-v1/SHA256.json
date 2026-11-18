@@ -2,6 +2,7 @@
   "media.list": {
     "sha256": "078e0aa60cd7a971f06b37094d86c5f43539400787946087860ac2c08acd7440",
     "bytes": 4240,
+    "count": 138,
     "sources": [
       {
         "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/39ef714731b5523b471d6868f8e3e6e83d915611/geo/geosite/netflix.list",
@@ -27,6 +28,30 @@
         "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/39ef714731b5523b471d6868f8e3e6e83d915611/geo/geosite/formula1.list",
         "sha256": "af04c7fde1113220d854276c9c2a83e4ac16c4a881e099cdc5e44a5a5f0652c5",
         "rules": 3
+      }
+    ]
+  },
+  "adult.list": {
+    "sha256": "8f73b719f2b806cce91c82a883b68a34fac8badb50569567becc86a513b80bf3",
+    "bytes": 185484,
+    "count": 6521,
+    "sources": [
+      {
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/39ef714731b5523b471d6868f8e3e6e83d915611/geo/geosite/category-porn.list",
+        "sha256": "05535cc5f92879d25c918af33b705abe64b00e3429bf2d52b207b109ce1792fd",
+        "rules": 6521
+      }
+    ]
+  },
+  "gambling.list": {
+    "sha256": "fc110254788352e432d37a0da6327e31c3b49662c425793c08ef24658f6de502",
+    "bytes": 21220830,
+    "count": 669823,
+    "sources": [
+      {
+        "url": "https://raw.githubusercontent.com/hagezi/dns-blocklists/ca3611bf1e28fe45e450093de9bbda26b8af12e9/wildcard/gambling.txt",
+        "sha256": "91fa136c6ebbd478a853eedda50c78e5513348aea9272b174e93460e497eceed",
+        "rules": 669823
       }
     ]
   }

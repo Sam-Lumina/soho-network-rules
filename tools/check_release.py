@@ -12,7 +12,7 @@ from urllib.parse import parse_qsl, urlsplit
 
 import yaml
 
-from build_configs import PAGES, COMMUNITY_MEDIA
+from build_configs import HAGEZI, PAGES, COMMUNITY_DATA, COMMUNITY_MEDIA, COMMUNITY_ADULT, COMMUNITY_GAMBLING
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,7 +27,9 @@ ASSETS = {
     "tif-mini.mrs", "meta-ads.list", "meta-international.list",
 }
 CONFIGS = {"dist/stable/mihomo-merge.yaml", "dist/stable/shadowrocket.conf"}
-COMMUNITY_FILES = {f"dist/{COMMUNITY_MEDIA}", "dist/data/community-v1/SOURCE.md", "dist/data/community-v1/SHA256.json"}
+COMMUNITY_LISTS = (COMMUNITY_MEDIA, COMMUNITY_ADULT, COMMUNITY_GAMBLING)
+COMMUNITY_FILES = {f"dist/{path}" for path in (*COMMUNITY_LISTS, f"{COMMUNITY_DATA}/SOURCE.md",
+                                               f"{COMMUNITY_DATA}/SHA256.json")}
 HULU_JAPAN = "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/HuluJapan.list"
 POLYFORM_SHA256 = "ffcca38841adb694b6f380647e15f17c446a4d1656fed51a1e2041d064c94cc8"
 GPL_SHA256 = "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
@@ -133,13 +135,27 @@ def shadowrocket_check(files, directory, policy):
         ]
         require(all(len(row) == 2 and row[0] in {"DOMAIN", "DOMAIN-SUFFIX"} and valid_domain(row[1])
                     for row in table[f"{PAGES}/{directory.removeprefix('dist/')}/{leaf}"]), "Malformed Shadowrocket external rules")
-    community = files[f"dist/{COMMUNITY_MEDIA}"]
-    media = json.loads(files["dist/data/community-v1/SHA256.json"])["media.list"]
-    require(sha256(community).hexdigest() == media["sha256"] and len(community) == media["bytes"],
-            "Community media checksum mismatch")
-    table[f"{PAGES}/{COMMUNITY_MEDIA}"] = [line.split(",") for line in community.decode().splitlines()]
-    require(all(len(row) == 2 and row[0] in {"DOMAIN", "DOMAIN-SUFFIX"} and valid_domain(row[1])
-                for row in table[f"{PAGES}/{COMMUNITY_MEDIA}"]), "Malformed community media list")
+    manifest = json.loads(files[f"dist/{COMMUNITY_DATA}/SHA256.json"])
+    for name in COMMUNITY_LISTS:
+        community = files[f"dist/{name}"]
+        entry = manifest[name.rsplit("/", 1)[1]]
+        require(sha256(community).hexdigest() == entry["sha256"] and len(community) == entry["bytes"],
+                "Community rule checksum mismatch")
+        rows = {tuple(line.split(",")) for line in community.decode().splitlines()}
+        require(len(rows) == entry["count"] > 0
+                and all(len(row) == 2 and row[0] in {"DOMAIN", "DOMAIN-SUFFIX"} and valid_domain(row[1])
+                        for row in rows), "Malformed community rule list")
+        table[f"{PAGES}/{name}"] = rows
+    gambling_sources = manifest["gambling.list"]["sources"]
+    require(len(gambling_sources) == 1
+            and re.fullmatch(re.escape(HAGEZI) + r"/[a-f0-9]{40}/wildcard/gambling\.txt",
+                             gambling_sources[0]["url"])
+            and re.fullmatch(r"[a-f0-9]{64}", gambling_sources[0]["sha256"]),
+            "Unexpected gambling provenance")
+    for path, entries in table.items():
+        table[path] = set(map(tuple, entries))
+    require(config[3] == ["RULE-SET", f"{PAGES}/{COMMUNITY_GAMBLING}", "REJECT"],
+            "Gambling must be rejected before proxy routing")
     upstream = {url for row in policy["sets"] for url in row.get("shadowrocket_urls", ())}
     require(upstream == {HULU_JAPAN, *{
                 f"https://raw.githubusercontent.com/poohyeban/shadowrocket-rules/main/rules/{name}/{name}.list"
@@ -160,13 +176,18 @@ def shadowrocket_check(files, directory, policy):
     def matches(kind, name, host):
         return host == name or (kind == "DOMAIN-SUFFIX" and host.endswith("." + name))
 
+    def in_set(entries, host):
+        labels = host.split(".")
+        return ("DOMAIN", host) in entries or any(
+            ("DOMAIN-SUFFIX", ".".join(labels[index:])) in entries for index in range(len(labels)))
+
     def route(host):
         # External DOMAIN-SET loading is validated on-device. Check first-match order for local data.
         for rule in config[1:]:
             if rule[0] == "FINAL":
                 return rule[1]
             kind, target, action = rule
-            if kind == "RULE-SET" and any(matches(*entry, host) for entry in table.get(target, ())):
+            if kind == "RULE-SET" and target in table and in_set(table[target], host):
                 return action
             if kind in {"DOMAIN", "DOMAIN-SUFFIX"} and matches(kind, target, host):
                 return action
@@ -182,6 +203,16 @@ def shadowrocket_check(files, directory, policy):
     }
     for action, hosts in cases.items():
         require(all(route(host) == action for host in hosts), f"Shadowrocket sample mismatch for {action}")
+    adult = table[f"{PAGES}/{COMMUNITY_ADULT}"]
+    gambling = table[f"{PAGES}/{COMMUNITY_GAMBLING}"]
+    require(all(kind == "DOMAIN-SUFFIX" and "." in host for kind, host in gambling),
+            "Unexpected gambling match type")
+    require(any(route(host) == "PROXY" for _, host in adult if not in_set(gambling, host)),
+            "No adult-only domain matched PROXY")
+    overlap = next((host for _, host in adult if in_set(gambling, host)), None)
+    if overlap:
+        require(route(overlap) == route("sub." + overlap) == "REJECT",
+                "Gambling must reject overlapping categories and their subdomains")
 
 
 def check(files):
@@ -210,6 +241,10 @@ def check(files):
         if "\0" in body:
             raise ValueError(f"Unexpected binary content in {path}")
         findings = set(scan(body))
+        if path == f"dist/{COMMUNITY_GAMBLING}":
+            # The published list contains UUID-shaped hostnames. Every line is
+            # independently checked as a strict domain suffix below.
+            findings.discard("node UUID")
         if findings:
             raise ValueError(f"{path}: {', '.join(sorted(findings))}")
 
@@ -223,7 +258,7 @@ def check(files):
     online = [provider for provider in providers if provider["type"] == "http"]
     require(len(providers) == len(policy["sets"]) + 2 and len(online) == len(policy["sets"]) and
             all(row["url"].startswith("https://") and
-                (row["format"] == "mrs" or (row["url"] == HULU_JAPAN and row["behavior"] == "classical"
+                (row["format"] == "mrs" or (row["url"] in {HULU_JAPAN, f"{PAGES}/{COMMUNITY_GAMBLING}"} and row["behavior"] == "classical"
                                             and row["format"] == "text")) and row["proxy"] == "PROXY"
                 and row["interval"] == 86400 and row["path"].startswith("./rule-providers/soho-public/") for row in online),
             "Bad provider inventory")
@@ -232,6 +267,11 @@ def check(files):
             require("dist/" + row["url"].removeprefix(PAGES + "/") in files, "Missing Pages rule artifact")
     rules = merge["rules"]
     require(rules[-1] == "MATCH,DIRECT" and sum(row.startswith("MATCH,") for row in rules) == 1, "Unexpected final rule")
+    require(rules[2] == "RULE-SET,soho-gambling,REJECT", "Gambling must reject before all proxy routes")
+    adult = rules.index("RULE-SET,soho-adult,PROXY")
+    require(rules[adult + 1] == "RULE-SET,soho-adult,REJECT"
+            and adult < rules.index("RULE-SET,soho-cn,DIRECT"),
+            "Adult provider must follow block rules and precede broad direct routes")
     supplemental = [row["source"] for row in policy["sets"] if row["policy"] == "proxy_supplement"]
     require(rules[-1 - 2*len(supplemental):-1] ==
             [f"RULE-SET,{source},{action}" for source in supplemental for action in ("PROXY", "REJECT")],

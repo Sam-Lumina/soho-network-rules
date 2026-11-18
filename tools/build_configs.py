@@ -12,7 +12,10 @@ POLICY = ROOT / "rules/policy.json"
 META = "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat"
 HAGEZI = "https://raw.githubusercontent.com/hagezi/dns-blocklists"
 PAGES = "https://sam-lumina.github.io/soho-network-rules"
-COMMUNITY_MEDIA = "data/community-v1/media.list"
+COMMUNITY_DATA = "data/community-v1"
+COMMUNITY_MEDIA = f"{COMMUNITY_DATA}/media.list"
+COMMUNITY_ADULT = f"{COMMUNITY_DATA}/adult.list"
+COMMUNITY_GAMBLING = f"{COMMUNITY_DATA}/gambling.list"
 PACKAGE = r"(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_"
 SIGNED_FAMILY = r"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\"
 
@@ -71,7 +74,7 @@ def windows(policy):
     # Public P2.9 retains the P2.8 rule order and exact Windows package allowlist.
     if policy["ad_exceptions"]:
         raise ValueError("Review an exact ad exception on both clients before enabling it.")
-    rules = ["RULE-SET,soho-threat,REJECT", "RULE-SET,soho-ads,REJECT"]
+    rules = [f"RULE-SET,{row['source']},REJECT" for row in policy["sets"] if row["policy"] == "reject"]
     ipv4 = "IP-CIDR,0.0.0.0/0"
     for process in (r"ChatGPT\.exe$", r"resources\\codex\.exe$"):
         rules.append(logic("AND", "PROCESS-PATH-REGEX," + PACKAGE + SIGNED_FAMILY + process, protected[True], ipv4) + ",PROXY")
@@ -84,6 +87,9 @@ def windows(policy):
     ]
     rules += [domain_rule(host) + ",DIRECT" for host in policy["direct_exceptions"]]
     rules += [protected[False] + ",PROXY", protected[False] + ",REJECT"]
+    for row in policy["sets"]:
+        if row["policy"] == "proxy_category":
+            rules.extend(f"RULE-SET,{row['source']},{action}" for action in ("PROXY", "REJECT"))
     for row in policy["sets"]:
         if row["policy"] == "direct":
             suffix = ",no-resolve" if row["kind"] == "ipcidr" else ""
@@ -113,6 +119,8 @@ def shadowrocket(policy):
         "DOMAIN-SET," + threat_source(policy) + ",REJECT",
         "RULE-SET," + data_url(policy, "meta-ads.list") + ",REJECT",
     ]
+    if any(row.get("hagezi_path") for row in policy["sets"]):
+        rules.append(f"RULE-SET,{PAGES}/{COMMUNITY_GAMBLING},REJECT")
     for ipv4_only in (True, False):
         if not ipv4_only:
             rules.extend(domain_rule(host) + ",DIRECT" for host in policy["direct_exceptions"])
@@ -121,6 +129,10 @@ def shadowrocket(policy):
     rules.extend(domain_rule(host) + ",PROXY" for host in policy["proxy_exceptions"])
     rules += [
         "RULE-SET," + data_url(policy, "meta-international.list") + ",PROXY",
+    ]
+    if any(row["policy"] == "proxy_category" for row in policy["sets"]):
+        rules.append(f"RULE-SET,{PAGES}/{COMMUNITY_ADULT},PROXY")
+    rules += [
         "DOMAIN-SUFFIX,microsoft.com,DIRECT",
         "DOMAIN-SUFFIX,windowsupdate.com,DIRECT",
     ]
