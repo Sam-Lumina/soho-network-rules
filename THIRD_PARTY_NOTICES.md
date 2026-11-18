@@ -10,7 +10,7 @@
 | [felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-china-list) | V2Fly 的 Google 分类引用了其域名数据，采用 WTFPL-2.0。 [固定版本许可](https://github.com/felixonmars/dnsmasq-china-list/blob/94f89bb5065cdff0777ef3a116ecfecb14ca1f56/LICENSE) |
 | [HaGeZi DNS Blocklists](https://github.com/hagezi/dns-blocklists) | 两端均使用 GPL-3.0 的 TIF Mini 和完整博彩名单，博彩名单转换为域名后缀规则。 [固定版本的再分发条款](https://github.com/hagezi/dns-blocklists/blob/e681da879e1b4aaed4962170d0e278d6817542df/README.md#disclaimer) · [转换后的社区数据来源和许可](dist/data/community-v1/SOURCE.md) |
 | [poohyeban/shadowrocket-rules](https://github.com/poohyeban/shadowrocket-rules) | Shadowrocket 从上游直接获取 Facebook 和 Instagram 域名规则。上游项目采用 MIT，并记录 V2Fly 和 SukkaW 数据来源。 [许可证](https://github.com/poohyeban/shadowrocket-rules/blob/main/LICENSE) |
-| [ACL4SSR](https://github.com/ACL4SSR/ACL4SSR) | 两端直接订阅 Hulu 日本版原始清单。其规则依上游 CC-BY-SA 4.0 条款使用。 [上游授权声明](https://github.com/ACL4SSR/ACL4SSR#license) |
+| [ACL4SSR](https://github.com/ACL4SSR/ACL4SSR) | 两端直接订阅 Hulu 日本版、All4、ITV、My5、Pandora、Qobuz 原始清单。其规则依上游 CC-BY-SA 4.0 条款使用。 [上游授权声明](https://github.com/ACL4SSR/ACL4SSR#license) |
 
 新增的 MetaCubeX 流媒体转换清单随 [对应来源及许可说明](dist/data/community-v1/SOURCE.md) 发布。
 

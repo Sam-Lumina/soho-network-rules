@@ -240,6 +240,62 @@ rule-providers:
     url: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/HuluJapan.list
     proxy: PROXY
     interval: 86400
+  soho-services-direct:
+    type: http
+    behavior: classical
+    format: text
+    path: ./rule-providers/soho-public/services-direct.list
+    url: https://sam-lumina.github.io/soho-network-rules/data/community-v1/services-direct.list
+    proxy: PROXY
+    interval: 86400
+  soho-services-proxy:
+    type: http
+    behavior: classical
+    format: text
+    path: ./rule-providers/soho-public/services-proxy.list
+    url: https://sam-lumina.github.io/soho-network-rules/data/community-v1/services-proxy.list
+    proxy: PROXY
+    interval: 86400
+  soho-acl-all4:
+    type: http
+    behavior: classical
+    format: text
+    path: ./rule-providers/soho-public/acl-all4.list
+    url: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/All4.list
+    proxy: PROXY
+    interval: 86400
+  soho-acl-itv:
+    type: http
+    behavior: classical
+    format: text
+    path: ./rule-providers/soho-public/acl-itv.list
+    url: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/ITV.list
+    proxy: PROXY
+    interval: 86400
+  soho-acl-my5:
+    type: http
+    behavior: classical
+    format: text
+    path: ./rule-providers/soho-public/acl-my5.list
+    url: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/My5.list
+    proxy: PROXY
+    interval: 86400
+  soho-acl-pandora:
+    type: http
+    behavior: classical
+    format: text
+    path: ./rule-providers/soho-public/acl-pandora.list
+    url: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Pandora.list
+    proxy: PROXY
+    interval: 86400
+  soho-acl-qobuz:
+    type: http
+    behavior: classical
+    format: text
+    path: ./rule-providers/soho-public/acl-qobuz.list
+    url: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Qobuz.list
+    proxy: PROXY
+    interval: 86400
   soho-core-ipv4:
     type: inline
     behavior: domain
@@ -330,4 +386,17 @@ rules:
 - RULE-SET,soho-formula1,REJECT
 - RULE-SET,soho-hulujapan,PROXY
 - RULE-SET,soho-hulujapan,REJECT
+- RULE-SET,soho-services-direct,DIRECT
+- RULE-SET,soho-services-proxy,PROXY
+- RULE-SET,soho-services-proxy,REJECT
+- RULE-SET,soho-acl-all4,PROXY
+- RULE-SET,soho-acl-all4,REJECT
+- RULE-SET,soho-acl-itv,PROXY
+- RULE-SET,soho-acl-itv,REJECT
+- RULE-SET,soho-acl-my5,PROXY
+- RULE-SET,soho-acl-my5,REJECT
+- RULE-SET,soho-acl-pandora,PROXY
+- RULE-SET,soho-acl-pandora,REJECT
+- RULE-SET,soho-acl-qobuz,PROXY
+- RULE-SET,soho-acl-qobuz,REJECT
 - MATCH,DIRECT

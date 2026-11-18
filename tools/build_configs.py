@@ -3,6 +3,7 @@
 import argparse
 import json
 from pathlib import Path
+import re
 
 import yaml
 
@@ -16,6 +17,9 @@ COMMUNITY_DATA = "data/community-v1"
 COMMUNITY_MEDIA = f"{COMMUNITY_DATA}/media.list"
 COMMUNITY_ADULT = f"{COMMUNITY_DATA}/adult.list"
 COMMUNITY_GAMBLING = f"{COMMUNITY_DATA}/gambling.list"
+COMMUNITY_PROXY = f"{COMMUNITY_DATA}/services-proxy.list"
+COMMUNITY_DIRECT = f"{COMMUNITY_DATA}/services-direct.list"
+ACL = "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset"
 PACKAGE = r"(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_"
 SIGNED_FAMILY = r"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\"
 
@@ -38,16 +42,33 @@ def data_url(policy, path):
     return f"{PAGES}/data/{policy['data_version']}/{path}"
 
 
+def community_providers(policy):
+    """Keep the additional service routes in the same order on both clients."""
+    routes = [
+        ("soho-services-direct", f"{PAGES}/{COMMUNITY_DIRECT}", "DIRECT"),
+        ("soho-services-proxy", f"{PAGES}/{COMMUNITY_PROXY}", "PROXY"),
+    ]
+    names = policy["community"]["proxy_acl"]
+    if any(not re.fullmatch(r"[A-Za-z0-9]+", name) for name in names):
+        raise ValueError("Invalid ACL4SSR rule filename")
+    routes.extend((f"soho-acl-{name.lower()}", f"{ACL}/{name}.list", "PROXY") for name in names)
+    return routes
+
+
+def text_provider(name, url):
+    return {
+        "type": "http", "behavior": "classical", "format": "text",
+        "path": f"./rule-providers/soho-public/{name.removeprefix('soho-')}.list",
+        "url": url, "proxy": "PROXY", "interval": 86400,
+    }
+
+
 def windows(policy):
     providers = {}
     for row in policy["sets"]:
         name = row["source"]
         if "text_url" in row:
-            providers[name] = {
-                "type": "http", "behavior": "classical", "format": "text",
-                "path": f"./rule-providers/soho-public/{name.removeprefix('soho-')}.list",
-                "url": row["text_url"], "proxy": "PROXY", "interval": 86400,
-            }
+            providers[name] = text_provider(name, row["text_url"])
             continue
         address = data_url(policy, "tif-mini.mrs") if row["kind"] == "threat" else f"{META}/meta/{row['meta_path']}"
         providers[name] = {
@@ -62,6 +83,8 @@ def windows(policy):
         if "meta_path" in row:
             providers[name]["path-in-bundle"] = row["meta_path"]
 
+    community = community_providers(policy)
+    providers.update((name, text_provider(name, url)) for name, url, _ in community)
     protected = {}
     for ipv4, key in ((True, "soho-core-ipv4"), (False, "soho-core-international")):
         rows = [row for row in policy["sets"] if row["policy"] == "proxy" and row["windows_ipv4_only"] == ipv4]
@@ -98,6 +121,10 @@ def windows(policy):
         if row["policy"] == "proxy_supplement":
             rules.append("RULE-SET," + row["source"] + ",PROXY")
             rules.append("RULE-SET," + row["source"] + ",REJECT")
+    for name, _, outcome in community:
+        rules.append(f"RULE-SET,{name},{outcome}")
+        if outcome == "PROXY":
+            rules.append(f"RULE-SET,{name},REJECT")
     rules.append("MATCH," + policy["fallback"])
     return {
         "find-process-mode": "strict",
@@ -140,6 +167,7 @@ def shadowrocket(policy):
         rules.append(f"RULE-SET,{PAGES}/{COMMUNITY_MEDIA},PROXY")
     rules.extend("RULE-SET," + url + ",PROXY"
                  for row in policy["sets"] for url in row.get("shadowrocket_urls", ()))
+    rules.extend(f"RULE-SET,{url},{outcome}" for _, url, outcome in community_providers(policy))
     rules.append("FINAL," + policy["fallback"])
     return "\n".join(rules) + "\n"
 

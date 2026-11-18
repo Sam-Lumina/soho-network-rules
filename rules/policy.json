@@ -247,6 +247,23 @@
       ]
     }
   ],
+  "community": {
+    "proxy_meta": [
+      "abema", "apple-tvplus", "bbc", "bluesky", "dazn", "deezer", "discord",
+      "discoveryplus", "disney", "espn", "huggingface", "hotstar",
+      "internet-archive", "hbo", "line", "mytvsuper", "niconico", "perplexity",
+      "pinterest", "primevideo", "reddit", "signal", "soundcloud", "threads",
+      "tidal", "tiktok", "tver", "viu", "vimeo", "wikimedia"
+    ],
+    "direct_meta": [
+      "category-bank-cn", "category-securities-cn", "category-documents-cn",
+      "category-education-cn", "category-games-cn", "category-logistics-cn",
+      "category-media-cn", "category-netdisk-cn", "category-social-media-cn",
+      "bilibili", "douyin", "steam", "epicgames", "riot", "roblox", "rockstar",
+      "ubisoft", "playstation", "nintendo", "xbox"
+    ],
+    "proxy_acl": ["All4", "ITV", "My5", "Pandora", "Qobuz"]
+  },
   "direct_exceptions": [
     "licdn.cn.cdn20.com",
     "+.licdn.cn",

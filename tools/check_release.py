@@ -12,7 +12,10 @@ from urllib.parse import parse_qsl, urlsplit
 
 import yaml
 
-from build_configs import HAGEZI, PAGES, COMMUNITY_DATA, COMMUNITY_MEDIA, COMMUNITY_ADULT, COMMUNITY_GAMBLING
+from build_configs import (
+    ACL, HAGEZI, META, PAGES, COMMUNITY_DATA, COMMUNITY_MEDIA, COMMUNITY_ADULT, COMMUNITY_GAMBLING,
+    COMMUNITY_DIRECT, COMMUNITY_PROXY, community_providers,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,7 +30,7 @@ ASSETS = {
     "tif-mini.mrs", "meta-ads.list", "meta-international.list",
 }
 CONFIGS = {"dist/stable/mihomo-merge.yaml", "dist/stable/shadowrocket.conf"}
-COMMUNITY_LISTS = (COMMUNITY_MEDIA, COMMUNITY_ADULT, COMMUNITY_GAMBLING)
+COMMUNITY_LISTS = (COMMUNITY_MEDIA, COMMUNITY_ADULT, COMMUNITY_GAMBLING, COMMUNITY_PROXY, COMMUNITY_DIRECT)
 COMMUNITY_FILES = {f"dist/{path}" for path in (*COMMUNITY_LISTS, f"{COMMUNITY_DATA}/SOURCE.md",
                                                f"{COMMUNITY_DATA}/SHA256.json")}
 HULU_JAPAN = "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/HuluJapan.list"
@@ -146,6 +149,16 @@ def shadowrocket_check(files, directory, policy):
                 and all(len(row) == 2 and row[0] in {"DOMAIN", "DOMAIN-SUFFIX"} and valid_domain(row[1])
                         for row in rows), "Malformed community rule list")
         table[f"{PAGES}/{name}"] = rows
+    for disposition in ("direct", "proxy"):
+        name = f"services-{disposition}.list"
+        paths = set()
+        for source in manifest[name]["sources"]:
+            match = re.fullmatch(re.escape(META) + r"/[a-f0-9]{40}/geo/geosite/([a-z0-9-]+)\.list", source["url"])
+            require(match and source["rules"] > 0 and re.fullmatch(r"[a-f0-9]{64}", source["sha256"]),
+                    "Unreviewed MetaCubeX source or checksum")
+            paths.add(match[1])
+        require(paths == set(policy["community"][f"{disposition}_meta"]),
+                "Community source inventory differs from the policy")
     gambling_sources = manifest["gambling.list"]["sources"]
     require(len(gambling_sources) == 1
             and re.fullmatch(re.escape(HAGEZI) + r"/[a-f0-9]{40}/wildcard/gambling\.txt",
@@ -161,6 +174,10 @@ def shadowrocket_check(files, directory, policy):
                 f"https://raw.githubusercontent.com/poohyeban/shadowrocket-rules/main/rules/{name}/{name}.list"
                 for name in ("Facebook", "Instagram")}},
             "Unreviewed Shadowrocket community rule source")
+    community = community_providers(policy)
+    upstream.update(url for _, url, _ in community if url.startswith(ACL + "/"))
+    require(config[-len(community)-1:-1] == [["RULE-SET", url, outcome] for _, url, outcome in community],
+            "Community routes must follow the existing rule precedence")
     for row in config[1:-1]:
         require(len(row) == 3 and row[-1] in {"DIRECT", "PROXY", "REJECT"}, "Malformed Shadowrocket rule")
         kind, item, outcome = row
@@ -197,8 +214,12 @@ def shadowrocket_check(files, directory, policy):
         "PROXY": ("chatgpt.com", "api.openai.com", "github.com", "www.google.com", "mail.google.com", "www.youtube.com",
                   "web.telegram.org", "x.com", "www.linkedin.com", "web.whatsapp.com", "claude.ai", "grok.com",
                   "muse.ai", "auth.muse.ai", "www.facebook.com", "www.instagram.com", "auth.meta.com",
-                  "www.netflix.com", "open.spotify.com", "www.twitch.tv", "www.formula1.com"),
-        "DIRECT": ("www.baidu.com", "www.taobao.com", "fe2cr.update.microsoft.com", "licdn.cn.cdn20.com", "soho-test.invalid"),
+                  "www.netflix.com", "open.spotify.com", "www.twitch.tv", "www.formula1.com",
+                  "www.disneyplus.com", "www.primevideo.com", "tv.apple.com", "www.max.com", "discord.com",
+                  "www.tiktok.com", "www.perplexity.ai", "huggingface.co", "www.reddit.com", "www.wikipedia.org"),
+        "DIRECT": ("www.baidu.com", "www.taobao.com", "fe2cr.update.microsoft.com", "licdn.cn.cdn20.com",
+                   "www.bilibili.com", "www.douyin.com", "www.icbc.com.cn", "store.steampowered.com",
+                   "www.epicgames.com", "soho-test.invalid"),
         "REJECT": ("doubleclick.net", "googlesyndication.com"),
     }
     for action, hosts in cases.items():
@@ -256,9 +277,12 @@ def check(files):
             and proxy["default-selected"] == "REJECT", "Unsafe selector")
     providers = list(merge["rule-providers"].values())
     online = [provider for provider in providers if provider["type"] == "http"]
-    require(len(providers) == len(policy["sets"]) + 2 and len(online) == len(policy["sets"]) and
+    community = community_providers(policy)
+    expected_online = len(policy["sets"]) + len(community)
+    approved_text = {HULU_JAPAN, f"{PAGES}/{COMMUNITY_GAMBLING}", *(url for _, url, _ in community)}
+    require(len(providers) == expected_online + 2 and len(online) == expected_online and
             all(row["url"].startswith("https://") and
-                (row["format"] == "mrs" or (row["url"] in {HULU_JAPAN, f"{PAGES}/{COMMUNITY_GAMBLING}"} and row["behavior"] == "classical"
+                (row["format"] == "mrs" or (row["url"] in approved_text and row["behavior"] == "classical"
                                             and row["format"] == "text")) and row["proxy"] == "PROXY"
                 and row["interval"] == 86400 and row["path"].startswith("./rule-providers/soho-public/") for row in online),
             "Bad provider inventory")
@@ -273,9 +297,13 @@ def check(files):
             and adult < rules.index("RULE-SET,soho-cn,DIRECT"),
             "Adult provider must follow block rules and precede broad direct routes")
     supplemental = [row["source"] for row in policy["sets"] if row["policy"] == "proxy_supplement"]
-    require(rules[-1 - 2*len(supplemental):-1] ==
-            [f"RULE-SET,{source},{action}" for source in supplemental for action in ("PROXY", "REJECT")],
-            "Community rules must follow existing routes and reject when proxy cannot carry a match")
+    tail = [f"RULE-SET,{source},{action}" for source in supplemental for action in ("PROXY", "REJECT")]
+    for name, _, outcome in community:
+        tail.append(f"RULE-SET,{name},{outcome}")
+        if outcome == "PROXY":
+            tail.append(f"RULE-SET,{name},REJECT")
+    require(rules[-1-len(tail):-1] == tail,
+            "Additional categories must follow existing routes and reject unmatched proxy transport")
     shadowrocket_check(files, directory, policy)
     print(f"Checked {len(files)} approved files, license texts, providers and Shadowrocket sample routes.")
 

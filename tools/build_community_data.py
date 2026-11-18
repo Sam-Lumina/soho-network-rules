@@ -5,15 +5,23 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor
 from hashlib import sha256
 import json
+import os
 import re
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
-from build_configs import ROOT, POLICY, META, HAGEZI, COMMUNITY_DATA, COMMUNITY_ADULT, COMMUNITY_GAMBLING
+from build_configs import (
+    ROOT, POLICY, META, HAGEZI, COMMUNITY_DATA, COMMUNITY_ADULT, COMMUNITY_GAMBLING,
+    COMMUNITY_PROXY, COMMUNITY_DIRECT,
+)
 from build_rule_data import download, domain_rules
 
 
 def revision_at(repository, branch):
-    with urlopen(f"https://api.github.com/repos/{repository}/git/ref/heads/{branch}", timeout=20) as reply:
+    headers = {"User-Agent": "SOHO-Community-Rules"}
+    if token := os.environ.get("SOHO_CATALOG_GITHUB_TOKEN"):
+        headers["Authorization"] = f"Bearer {token}"
+    request = Request(f"https://api.github.com/repos/{repository}/git/ref/heads/{branch}", headers=headers)
+    with urlopen(request, timeout=20) as reply:
         revision = json.load(reply)["object"]["sha"]
     if not re.fullmatch("[0-9a-f]{40}", revision):
         raise ValueError("Unexpected upstream revision")
@@ -61,6 +69,10 @@ def build():
                                             for row in policy["sets"] if row["policy"] == "proxy_category"],
         COMMUNITY_GAMBLING.rsplit("/", 1)[1]: [f"{HAGEZI}/{hagezi}/{row['hagezi_path']}"
                                                for row in policy["sets"] if row.get("hagezi_path")],
+        COMMUNITY_PROXY.rsplit("/", 1)[1]: [f"{META}/{meta}/geo/geosite/{name}.list"
+                                            for name in policy["community"]["proxy_meta"]],
+        COMMUNITY_DIRECT.rsplit("/", 1)[1]: [f"{META}/{meta}/geo/geosite/{name}.list"
+                                             for name in policy["community"]["direct_meta"]],
     }
     metadata = {}
     parent.mkdir(parents=True, exist_ok=True)

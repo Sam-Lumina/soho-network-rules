@@ -13,7 +13,7 @@ SOHO Network Rules 为 Clash Verge Rev / Mihomo 和 Shadowrocket 提供一套通
 
 1. 保留原订阅。在 Clash Verge「订阅」创建一份单独的 Remote，使用你自己的订阅地址。自管节点也可存放在自己的 Local 配置。
 2. 下载 Merge 文件，将完整内容粘贴到这份订阅的「编辑扩展配置」，保存并选中该订阅。这个文件需要绑定到已有节点的配置。
-3. 在「代理」页的 **PROXY** 组选择可用节点，再从「规则」页刷新规则集。确认 25 个远程规则集及两个内联规则集均已加载后，用 Rule + TUN，系统代理关闭。临时切全局时继续使用同一个 PROXY。
+3. 在「代理」页的 **PROXY** 组选择可用节点，再从「规则」页刷新规则集。确认 32 个远程规则集及两个内联规则集均已加载后，用 Rule + TUN，系统代理关闭。临时切全局时继续使用同一个 PROXY。
 
 Windows 已在 Clash Verge Rev 2.5.10 / Mihomo 1.19.33 上实机验证 Rule + TUN 和 Global + TUN，系统代理关闭。节点订阅按客户端设置更新，远程规则集每 24 小时检查。Merge 有新版时，可从同一地址下载并替换订阅扩展。联网异常时可选回原订阅。
 
@@ -37,11 +37,13 @@ Windows 验收中，国内外 DNS 样本均由 TUN 接管，直连和代理的 U
 
 ## 社区分类对照
 
-GitHub Actions 定期读取十个公开上游的分类目录并对比文件内容签名。运行产物包含同类优先来源、候选走法和待审核分类，后续运行还会列出新增、删除和修改。这个对照表用于检查哪些分类适合接入。已接入的远程清单按客户端设置刷新。
+GitHub Actions 定期读取十个公开上游的分类目录并对比文件内容签名。对照表列出优先来源、已选走法、按默认策略处理的分类，以及需要判断的混合分类。相同分类中的相同文件和内容不同的文件分别标记。后续运行记录新增、删除和修改。客户端按设置刷新已接入的远程名单。
 
 Netflix、Hulu、Spotify、Twitch 和 Formula 1 使用排名靠前的 MetaCubeX 分类。独立运营的 Hulu 日本版由 ACL4SSR 补齐。Windows 直接订阅原始名单。iPhone 的 MetaCubeX 流媒体清单由 Actions 定时转换发布，Hulu 日本版直接订阅上游。
 
 成人类使用 MetaCubeX 的分类，博彩使用 HaGeZi 完整名单。两类名单交叉时先拦截。Windows 直接使用 MetaCubeX 成人分类，Shadowrocket 使用定时转换的同源清单。两个客户端共用转换后的博彩名单。分类过滤在客户端的规则模式生效。
+
+两端共用扩展业务名单。Disney+、Prime Video、Apple TV+、HBO、Discord、TikTok、Perplexity、Hugging Face 等来自 MetaCubeX，走代理。国内银行、证券、教育、物流、网盘、社交，以及 Steam、Epic、任天堂等常规游戏服务走直连。ACL4SSR 补充 All4、ITV、My5、Pandora、Qobuz，走代理。精确分类见 [共同策略](rules/policy.json)，构建后的 MetaCubeX 名单每天检查上游并自动更新。普通未指定用途的类别继续按现有规则匹配，最后由直连兜底。
 
 ## 许可与反馈
 

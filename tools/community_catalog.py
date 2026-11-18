@@ -16,6 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 GITHUB = "https://api.github.com"
 ALIASES = {
     "abematv": "abema",
+    "appletv": "apple-tvplus",
+    "bbciplayer": "bbc",
     "category-porn": "adult",
     "china": "cn",
     "claude": "anthropic",
@@ -27,6 +29,8 @@ ALIASES = {
     "hbo-go-hkg": "hbo",
     "hbomax": "hbo",
     "neteasemusic": "netease",
+    "steamcn": "steam-cn",
+    "youtubemusic": "youtube",
 }
 REVIEW_REQUIRED = re.compile(
     r"(?:^|[-_])(?:adult|bank|betting|crypto|cryptocurrency|finance|gambling|gov|payment|porn|securities)(?:$|[-_])"
@@ -35,6 +39,10 @@ AGGREGATES = {
     "acceleratedirectsites", "ai", "all", "applications", "cncidr", "direct", "download", "game", "global",
     "gfw", "greatfire", "lancidr", "proxy", "reject", "tld-not-cn", "telegramcidr",
     "geolocation-cn", "geolocation-not-cn",
+}
+MIXED_OR_SENSITIVE = {
+    "akamai", "amazon", "appleid", "cloudflare", "mastercard", "paypal", "steamregioncheck",
+    "stripe", "visa", "wise",
 }
 
 
@@ -96,6 +104,9 @@ def reviewed_routes(policy):
         source_path = entry.get("meta_path") or entry.get("text_url")
         if source_path and entry["kind"] != "ipcidr":
             routes[category_key(Path(source_path).stem)] = actions[entry["policy"]]
+    for group, categories in policy["community"].items():
+        action = group.split("_", 1)[0].upper()
+        routes.update((category_key(name), action) for name in categories)
     return routes
 
 
@@ -104,7 +115,7 @@ def decide(label, reviewed):
         return reviewed[label], "existing-policy"
     if label in AGGREGATES or label.startswith("geolocation-"):
         return "", "aggregate-review"
-    if REVIEW_REQUIRED.search(label):
+    if label in MIXED_OR_SENSITIVE or REVIEW_REQUIRED.search(label):
         return "", "sensitive-review"
     if label.endswith("-cn") and not label.endswith("-not-cn"):
         return "DIRECT", "china-scope"
@@ -120,6 +131,7 @@ def compare(snapshots, policy):
             label = row["category"].split("@", 1)[0]
             key = category_key(label)
             action, reason = decide(key, reviewed)
+            disposition = reason
             if source["role"] == "template":
                 action, reason = "", "client-template"
             elif "@" in row["category"]:
@@ -129,13 +141,14 @@ def compare(snapshots, policy):
             elif source["role"] == "data-source":
                 reason = "upstream-of-ranked-provider"
             elif key in choices:
-                reason = "duplicate-category"
+                reason = "same-content" if row["sha"] == choices[key][1] else "same-category-different-content"
             else:
-                choices[key] = source["repo"]
+                choices[key] = (source["repo"], row["sha"])
             report.append({
                 "rank": rank, "source": source["repo"], "category": row["category"],
-                "normalized_category": key, "preferred_source": choices.get(key, ""),
-                "suggested_action": action, "reason": reason, "path": row["path"], "sha": row["sha"]
+                "normalized_category": key, "preferred_source": choices.get(key, ("", ""))[0],
+                "suggested_action": action, "policy_status": disposition,
+                "reason": reason, "path": row["path"], "sha": row["sha"]
             })
     return report
 
