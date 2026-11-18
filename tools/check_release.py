@@ -130,8 +130,10 @@ def shadowrocket_check(files, directory, policy):
         ]
         require(all(len(row) == 2 and row[0] in {"DOMAIN", "DOMAIN-SUFFIX"} and valid_domain(row[1])
                     for row in table[f"{PAGES}/{directory.removeprefix('dist/')}/{leaf}"]), "Malformed Shadowrocket external rules")
-    upstream = {row["shadowrocket_url"] for row in policy["sets"] if "shadowrocket_url" in row}
-    require(upstream == {"https://raw.githubusercontent.com/poohyeban/shadowrocket-rules/main/rules/Facebook/Facebook.list"},
+    upstream = {url for row in policy["sets"] for url in row.get("shadowrocket_urls", ())}
+    require(upstream == {
+                f"https://raw.githubusercontent.com/poohyeban/shadowrocket-rules/main/rules/{name}/{name}.list"
+                for name in ("Facebook", "Instagram")},
             "Unreviewed Shadowrocket community rule source")
     for row in config[1:-1]:
         require(len(row) == 3 and row[-1] in {"DIRECT", "PROXY", "REJECT"}, "Malformed Shadowrocket rule")
@@ -163,7 +165,7 @@ def shadowrocket_check(files, directory, policy):
     cases = {
         "PROXY": ("chatgpt.com", "api.openai.com", "github.com", "www.google.com", "mail.google.com", "www.youtube.com",
                   "web.telegram.org", "x.com", "www.linkedin.com", "web.whatsapp.com", "claude.ai", "grok.com",
-                  "muse.ai", "auth.muse.ai", "www.facebook.com"),
+                  "muse.ai", "auth.muse.ai", "www.facebook.com", "www.instagram.com", "auth.meta.com"),
         "DIRECT": ("www.baidu.com", "www.taobao.com", "fe2cr.update.microsoft.com", "licdn.cn.cdn20.com", "soho-test.invalid"),
         "REJECT": ("doubleclick.net", "googlesyndication.com"),
     }

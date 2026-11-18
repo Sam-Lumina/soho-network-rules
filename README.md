@@ -27,7 +27,7 @@ Windows 已在 Clash Verge Rev 2.5.10 / Mihomo 1.19.33 上实机验证 Rule + TU
 
 Shadowrocket 2.2.93 和 2.2.76 均已实机导入、选用和手动更新。两台验收设备均已在 Shadowrocket「设置 → 更新 → 配置」开启自动后台更新，间隔为 7 天，并允许 iOS 后台 App 刷新。首次后台自动更新尚待观察。
 
-Windows 直接跟随 MetaCubeX 的国外 AI 和 Facebook 分类更新，现有国内和 Microsoft 规则优先于这两个补充分类。Shadowrocket 直接订阅社区维护的 Facebook 域名清单。两端在配置中保留 Muse 首页、认证及 Facebook 登录的已验证主机。
+Windows 直接跟随 MetaCubeX 的国外 AI 和 Meta 分类更新，现有国内和 Microsoft 规则优先于这两个补充分类。Shadowrocket 直接订阅社区维护的 Facebook 和 Instagram 域名清单。两端在配置中保留 Muse 登录链路的已验证主机。
 
 ## 已知限制
 

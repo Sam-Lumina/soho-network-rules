@@ -161,15 +161,15 @@ rule-providers:
     proxy: PROXY
     interval: 86400
     path-in-bundle: geo/geosite/category-ai-!cn.mrs
-  soho-facebook:
+  soho-meta:
     type: http
     behavior: domain
     format: mrs
-    path: ./rule-providers/soho-public/facebook.mrs
-    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/facebook.mrs
+    path: ./rule-providers/soho-public/meta.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/meta.mrs
     proxy: PROXY
     interval: 86400
-    path-in-bundle: geo/geosite/facebook.mrs
+    path-in-bundle: geo/geosite/meta.mrs
   soho-core-ipv4:
     type: inline
     behavior: domain
@@ -221,6 +221,8 @@ rule-providers:
     - muse.ai
     - auth.muse.ai
     - www.facebook.com
+    - www.instagram.com
+    - auth.meta.com
 rules:
 - RULE-SET,soho-threat,REJECT
 - RULE-SET,soho-ads,REJECT
@@ -241,6 +243,6 @@ rules:
 - RULE-SET,soho-geoip-cn,DIRECT,no-resolve
 - RULE-SET,soho-community-ai,PROXY
 - RULE-SET,soho-community-ai,REJECT
-- RULE-SET,soho-facebook,PROXY
-- RULE-SET,soho-facebook,REJECT
+- RULE-SET,soho-meta,PROXY
+- RULE-SET,soho-meta,REJECT
 - MATCH,DIRECT

@@ -116,8 +116,8 @@ def shadowrocket(policy):
         "DOMAIN-SUFFIX,microsoft.com,DIRECT",
         "DOMAIN-SUFFIX,windowsupdate.com,DIRECT",
     ]
-    rules.extend("RULE-SET," + row["shadowrocket_url"] + ",PROXY"
-                 for row in policy["sets"] if "shadowrocket_url" in row)
+    rules.extend("RULE-SET," + url + ",PROXY"
+                 for row in policy["sets"] for url in row.get("shadowrocket_urls", ()))
     rules.append("FINAL," + policy["fallback"])
     return "\n".join(rules) + "\n"
 

@@ -178,13 +178,16 @@
       "meta_path": "geo/geosite/category-ai-!cn.mrs"
     },
     {
-      "source": "soho-facebook",
+      "source": "soho-meta",
       "policy": "proxy_supplement",
       "kind": "domain",
       "domains": [],
       "windows_ipv4_only": false,
-      "meta_path": "geo/geosite/facebook.mrs",
-      "shadowrocket_url": "https://raw.githubusercontent.com/poohyeban/shadowrocket-rules/main/rules/Facebook/Facebook.list"
+      "meta_path": "geo/geosite/meta.mrs",
+      "shadowrocket_urls": [
+        "https://raw.githubusercontent.com/poohyeban/shadowrocket-rules/main/rules/Facebook/Facebook.list",
+        "https://raw.githubusercontent.com/poohyeban/shadowrocket-rules/main/rules/Instagram/Instagram.list"
+      ]
     }
   ],
   "direct_exceptions": [
@@ -195,7 +198,9 @@
   "proxy_exceptions": [
     "muse.ai",
     "auth.muse.ai",
-    "www.facebook.com"
+    "www.facebook.com",
+    "www.instagram.com",
+    "auth.meta.com"
   ],
   "ad_exceptions": [],
   "fallback": "DIRECT",
