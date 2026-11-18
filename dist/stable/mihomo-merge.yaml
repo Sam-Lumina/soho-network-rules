@@ -1,0 +1,221 @@
+# SOHO Network Rules | PolyForm-Noncommercial-1.0.0
+# https://polyformproject.org/licenses/noncommercial/1.0.0
+# Clash Verge Rev subscription-level Merge; install over your own profile.
+find-process-mode: strict
+proxy-groups:
+- name: PROXY
+  type: select
+  proxies:
+  - REJECT
+  include-all-proxies: true
+  include-all-providers: true
+  exclude-type: Direct|Compatible
+  default-selected: REJECT
+  empty-fallback: REJECT
+- name: GLOBAL
+  type: select
+  proxies:
+  - PROXY
+  empty-fallback: REJECT
+rule-providers:
+  soho-threat:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/threat.mrs
+    url: https://sam-lumina.github.io/soho-network-rules/data/p2.9/tif-mini.mrs
+    proxy: PROXY
+    interval: 86400
+  soho-ads:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/ads.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ads.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/category-ads.mrs
+  soho-openai:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/openai.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/openai.mrs
+  soho-github:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/github.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/github.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/github.mrs
+  soho-youtube:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/youtube.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/youtube.mrs
+  soho-telegram:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/telegram.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/telegram.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/telegram.mrs
+  soho-twitter:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/twitter.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/twitter.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/twitter.mrs
+  soho-google:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/google.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/google.mrs
+  soho-linkedin:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/linkedin.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/linkedin.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/linkedin.mrs
+  soho-whatsapp:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/whatsapp.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/whatsapp.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/whatsapp.mrs
+  soho-anthropic:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/anthropic.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/anthropic.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/anthropic.mrs
+  soho-xai:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/xai.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/xai.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/xai.mrs
+  soho-microsoft:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/microsoft.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/microsoft.mrs
+  soho-cn:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/cn.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/cn.mrs
+  soho-geoip-cn:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    path: ./rule-providers/soho-public/geoip-cn.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geoip/cn.mrs
+  soho-core-ipv4:
+    type: inline
+    behavior: domain
+    payload:
+    - chatgpt.com
+    - +.openai.com
+    - +.oaistatic.com
+    - +.oaiusercontent.com
+    - +.github.com
+    - +.githubusercontent.com
+    - +.githubassets.com
+  soho-core-international:
+    type: inline
+    behavior: domain
+    payload:
+    - youtube.com
+    - www.youtube.com
+    - youtu.be
+    - +.googlevideo.com
+    - telegram.org
+    - web.telegram.org
+    - api.telegram.org
+    - t.me
+    - x.com
+    - www.x.com
+    - twitter.com
+    - api.x.com
+    - api.twitter.com
+    - google.com
+    - www.google.com
+    - mail.google.com
+    - accounts.google.com
+    - +.gmail.com
+    - linkedin.com
+    - www.linkedin.com
+    - api.linkedin.com
+    - whatsapp.com
+    - www.whatsapp.com
+    - web.whatsapp.com
+    - api.whatsapp.com
+    - claude.ai
+    - www.claude.ai
+    - console.anthropic.com
+    - api.anthropic.com
+    - grok.com
+    - www.grok.com
+    - grok.x.com
+    - api.x.ai
+rules:
+- RULE-SET,soho-threat,REJECT
+- RULE-SET,soho-ads,REJECT
+- AND,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\ChatGPT\.exe$),(OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
+- AND,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\resources\\codex\.exe$),(OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
+- PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[^\\]+\\,REJECT
+- PROCESS-NAME,ChatGPT.exe,REJECT
+- PROCESS-NAME,codex.exe,REJECT
+- AND,((OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
+- OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github)),REJECT
+- DOMAIN,licdn.cn.cdn20.com,DIRECT
+- DOMAIN-SUFFIX,licdn.cn,DIRECT
+- DOMAIN-SUFFIX,linkedin.cn,DIRECT
+- OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube),(RULE-SET,soho-telegram),(RULE-SET,soho-twitter),(RULE-SET,soho-google),(RULE-SET,soho-linkedin),(RULE-SET,soho-whatsapp),(RULE-SET,soho-anthropic),(RULE-SET,soho-xai)),PROXY
+- OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube),(RULE-SET,soho-telegram),(RULE-SET,soho-twitter),(RULE-SET,soho-google),(RULE-SET,soho-linkedin),(RULE-SET,soho-whatsapp),(RULE-SET,soho-anthropic),(RULE-SET,soho-xai)),REJECT
+- RULE-SET,soho-microsoft,DIRECT
+- RULE-SET,soho-cn,DIRECT
+- RULE-SET,soho-geoip-cn,DIRECT,no-resolve
+- MATCH,DIRECT

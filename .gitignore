@@ -1,0 +1,17 @@
+.env*
+*.key
+*.pem
+*.p12
+*.log
+*.db
+*.sqlite*
+*.zip
+*.7z
+*.rar
+*.bak
+__pycache__/
+.venv/
+.cache/
+private/
+profiles/
+BundleMRS.7z

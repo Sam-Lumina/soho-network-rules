@@ -1,0 +1,185 @@
+{
+  "sets": [
+    {
+      "source": "soho-threat",
+      "policy": "reject",
+      "kind": "threat",
+      "domains": [],
+      "windows_ipv4_only": false
+    },
+    {
+      "source": "soho-ads",
+      "policy": "reject",
+      "kind": "advertising",
+      "domains": [],
+      "windows_ipv4_only": false,
+      "meta_path": "geo/geosite/category-ads.mrs"
+    },
+    {
+      "source": "soho-openai",
+      "policy": "proxy",
+      "kind": "domain",
+      "domains": [
+        "chatgpt.com",
+        "+.openai.com",
+        "+.oaistatic.com",
+        "+.oaiusercontent.com"
+      ],
+      "windows_ipv4_only": true,
+      "meta_path": "geo/geosite/openai.mrs"
+    },
+    {
+      "source": "soho-github",
+      "policy": "proxy",
+      "kind": "domain",
+      "domains": [
+        "+.github.com",
+        "+.githubusercontent.com",
+        "+.githubassets.com"
+      ],
+      "windows_ipv4_only": true,
+      "meta_path": "geo/geosite/github.mrs"
+    },
+    {
+      "source": "soho-youtube",
+      "policy": "proxy",
+      "kind": "domain",
+      "domains": [
+        "youtube.com",
+        "www.youtube.com",
+        "youtu.be",
+        "+.googlevideo.com"
+      ],
+      "windows_ipv4_only": false,
+      "meta_path": "geo/geosite/youtube.mrs"
+    },
+    {
+      "source": "soho-telegram",
+      "policy": "proxy",
+      "kind": "domain",
+      "domains": [
+        "telegram.org",
+        "web.telegram.org",
+        "api.telegram.org",
+        "t.me"
+      ],
+      "windows_ipv4_only": false,
+      "meta_path": "geo/geosite/telegram.mrs"
+    },
+    {
+      "source": "soho-twitter",
+      "policy": "proxy",
+      "kind": "domain",
+      "domains": [
+        "x.com",
+        "www.x.com",
+        "twitter.com",
+        "api.x.com",
+        "api.twitter.com"
+      ],
+      "windows_ipv4_only": false,
+      "meta_path": "geo/geosite/twitter.mrs"
+    },
+    {
+      "source": "soho-google",
+      "policy": "proxy",
+      "kind": "domain",
+      "domains": [
+        "google.com",
+        "www.google.com",
+        "mail.google.com",
+        "accounts.google.com",
+        "+.gmail.com"
+      ],
+      "windows_ipv4_only": false,
+      "meta_path": "geo/geosite/google.mrs"
+    },
+    {
+      "source": "soho-linkedin",
+      "policy": "proxy",
+      "kind": "domain",
+      "domains": [
+        "linkedin.com",
+        "www.linkedin.com",
+        "api.linkedin.com"
+      ],
+      "windows_ipv4_only": false,
+      "meta_path": "geo/geosite/linkedin.mrs"
+    },
+    {
+      "source": "soho-whatsapp",
+      "policy": "proxy",
+      "kind": "domain",
+      "domains": [
+        "whatsapp.com",
+        "www.whatsapp.com",
+        "web.whatsapp.com",
+        "api.whatsapp.com"
+      ],
+      "windows_ipv4_only": false,
+      "meta_path": "geo/geosite/whatsapp.mrs"
+    },
+    {
+      "source": "soho-anthropic",
+      "policy": "proxy",
+      "kind": "domain",
+      "domains": [
+        "claude.ai",
+        "www.claude.ai",
+        "console.anthropic.com",
+        "api.anthropic.com"
+      ],
+      "windows_ipv4_only": false,
+      "meta_path": "geo/geosite/anthropic.mrs"
+    },
+    {
+      "source": "soho-xai",
+      "policy": "proxy",
+      "kind": "domain",
+      "domains": [
+        "grok.com",
+        "www.grok.com",
+        "grok.x.com",
+        "api.x.ai"
+      ],
+      "windows_ipv4_only": false,
+      "meta_path": "geo/geosite/xai.mrs"
+    },
+    {
+      "source": "soho-microsoft",
+      "policy": "direct",
+      "kind": "domain",
+      "domains": [],
+      "windows_ipv4_only": false,
+      "meta_path": "geo/geosite/microsoft.mrs"
+    },
+    {
+      "source": "soho-cn",
+      "policy": "direct",
+      "kind": "domain",
+      "domains": [],
+      "windows_ipv4_only": false,
+      "meta_path": "geo/geosite/cn.mrs"
+    },
+    {
+      "source": "soho-geoip-cn",
+      "policy": "direct",
+      "kind": "ipcidr",
+      "domains": [],
+      "windows_ipv4_only": false,
+      "meta_path": "geo/geoip/cn.mrs"
+    }
+  ],
+  "direct_exceptions": [
+    "licdn.cn.cdn20.com",
+    "+.licdn.cn",
+    "+.linkedin.cn"
+  ],
+  "ad_exceptions": [],
+  "fallback": "DIRECT",
+  "data_version": "p2.9",
+  "meta_snapshot": "1916b151c3661fc74f709ac69c271ff9ae912027",
+  "threat_snapshot": "e681da879e1b4aaed4962170d0e278d6817542df",
+  "threat_input_sha256": "1c95fec8ba095c9ad4f70aa29395af1991796e3bd89033734321b9bf23b97a41",
+  "threat_mrs_sha256": "889d6e950188a4d443945e86891d2a4e979a46ba0a9f744555a6c3c75a180eeb"
+}
