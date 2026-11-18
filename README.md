@@ -4,7 +4,7 @@ SOHO Network Rules 为 Clash Verge Rev / Mihomo 和 Shadowrocket 提供一套通
 
 ## Stable 下载
 
-以下地址在 GitHub Pages 首次成功部署后可用。
+以下地址提供 GitHub Pages 上的稳定配置。
 
 - Windows · [mihomo-merge.yaml](https://sam-lumina.github.io/soho-network-rules/stable/mihomo-merge.yaml)
 - iPhone · [shadowrocket.conf](https://sam-lumina.github.io/soho-network-rules/stable/shadowrocket.conf)
@@ -15,19 +15,23 @@ SOHO Network Rules 为 Clash Verge Rev / Mihomo 和 Shadowrocket 提供一套通
 2. 下载 Merge 文件，将完整内容粘贴到这份订阅的「编辑扩展配置」，保存并选中该订阅。这个文件需要绑定到已有节点的配置。
 3. 在「代理」页的 **PROXY** 组选择可用节点，再从「规则」页刷新规则集。确认 15 个远程规则集及两个内联规则集均已加载后，用 Rule + TUN，系统代理关闭。临时切全局时继续使用同一个 PROXY。
 
-Windows 验证基线为 Clash Verge Rev 2.5.10 / Mihomo 1.19.33。节点订阅按客户端设置更新，远程规则集每 24 小时更新。Merge 文件有新版时，下载并替换本地扩展。联网异常时可选回原订阅。
+Windows 已在 Clash Verge Rev 2.5.10 / Mihomo 1.19.33 上实机验证 Rule + TUN 和 Global + TUN，系统代理关闭。节点订阅按客户端设置更新，15 个远程规则集每 24 小时检查。Merge 有新版时，可从同一地址下载并替换订阅扩展。联网异常时可选回原订阅。
+
+已配置本机定时同步的设备可以定期检查 Merge。定时检查已运行，新版自动替换并生效仍待实测。本机同步需单独配置，公开安装流程使用 Clash Verge 的订阅扩展。
 
 ## Shadowrocket 快速安装
 
 1. 在「首页」导入自己的节点或订阅，选择可用节点。
 2. 在「配置」添加 Stable 配置地址，下载并选中。
-3. 将「全局路由」设为「配置」。后续可在客户端更新远程配置。
+3. 将「全局路由」设为「配置」。点配置文件名，再点「更新」，可手动刷新整份配置。
 
-状态为 **FORMAT VERIFIED / LIVE TEST PENDING**。2.2.93 和 2.2.76 的实机导入、更新及故障行为在 P3.0 验证。
+Shadowrocket 2.2.93 和 2.2.76 均已实机导入、选用和手动更新。两台验收设备均已在 Shadowrocket「设置 → 更新 → 配置」开启自动后台更新，间隔为 7 天，并允许 iOS 后台 App 刷新。首次后台自动更新尚待观察。
 
 ## 已知限制
 
 已列入静态保护的关键域名在规则集缺失时仍匹配代理策略。初次下载失败时，只有动态规则覆盖的目标可能落入直连兜底。先确认规则集加载再使用。域名过滤只能拦截部分广告。DNS、IPv6 和 UDP 的实际表现取决于客户端、系统与节点。
+
+Windows 验收中，国内外 DNS 样本均由 TUN 接管，直连和代理的 UDP 样本均有应答。部分强制 HTTP/3 样本未完成握手，普通 HTTPS 经 TCP 实测可用。验收网络未提供可用的公网 IPv6，双栈下的防绕过仍待验证。
 
 ## 许可与反馈
 
@@ -37,4 +41,4 @@ Windows 验证基线为 Clash Verge Rev 2.5.10 / Mihomo 1.19.33。节点订阅�
 
 ## English
 
-Routing rules for Mihomo / Clash Verge Rev and Shadowrocket. Bring your own nodes and keep them in your client. For Windows, attach the Stable Merge to your own subscription profile. For iOS, add the Stable configuration URL in Shadowrocket. iOS live tests are pending. Original material is source available under PolyForm Noncommercial, and third-party data keeps its original terms.
+Routing rules for Mihomo / Clash Verge Rev and Shadowrocket. Bring your own nodes and keep them in your client. Windows Rule and Global modes were verified with TUN. Import and manual refresh were verified on Shadowrocket 2.2.93 and 2.2.76. Background refresh is configured and its first automatic run has yet to be observed. Original material is source available under PolyForm Noncommercial, and third-party data keeps its original terms.
