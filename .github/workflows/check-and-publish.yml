@@ -6,6 +6,13 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      data_only:
+        description: Refresh community data using the daily checks
+        type: boolean
+        default: false
+  schedule:
+    - cron: '18 2 * * *'
 
 permissions:
   contents: read
@@ -13,6 +20,8 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-24.04
+    outputs:
+      publish: ${{ steps.release.outputs.publish }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -34,15 +43,40 @@ jobs:
           echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $RUNNER_TEMP/$archive" | sha256sum --check
           tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" gitleaks
           "$RUNNER_TEMP/gitleaks" dir --redact=100 --max-decode-depth 3 --no-banner .
+      - name: Prepare approved static files
+        id: release
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+        env:
+          DATA_ONLY: ${{ github.event_name == 'schedule' || inputs.data_only }}
+        run: |
+          if [ "$DATA_ONLY" = "true" ]; then
+            base="https://sam-lumina.github.io/soho-network-rules"
+            for name in mihomo-merge.yaml shadowrocket.conf; do
+              curl --fail --silent --show-error --proto '=https' -H 'Cache-Control: no-cache' "$base/stable/$name" -o "$RUNNER_TEMP/$name"
+              if ! cmp --silent "$RUNNER_TEMP/$name" "dist/stable/$name"; then
+                echo "Stable has a different reviewed configuration. Waiting for manual release."
+                exit 0
+              fi
+            done
+            curl --fail --silent --show-error --proto '=https' -H 'Cache-Control: no-cache' \
+              "$base/data/community-v1/media.list" -o "$RUNNER_TEMP/live-media.list"
+            python -B tools/build_community_data.py
+            python -B tools/check_release.py
+            if cmp --silent "$RUNNER_TEMP/live-media.list" dist/data/community-v1/media.list; then
+              echo "Community media data is current."
+              exit 0
+            fi
+          fi
+          echo 'publish=true' >> "$GITHUB_OUTPUT"
       - name: Package reviewed static files
-        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+        if: steps.release.outputs.publish == 'true'
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
           path: dist
 
   publish:
     needs: check
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    if: needs.check.outputs.publish == 'true'
     runs-on: ubuntu-24.04
     permissions:
       pages: write

@@ -170,6 +170,59 @@ rule-providers:
     proxy: PROXY
     interval: 86400
     path-in-bundle: geo/geosite/meta.mrs
+  soho-netflix:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/netflix.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/netflix.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/netflix.mrs
+  soho-hulu:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/hulu.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/hulu.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/hulu.mrs
+  soho-spotify:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/spotify.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/spotify.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/spotify.mrs
+  soho-twitch:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/twitch.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/twitch.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/twitch.mrs
+  soho-formula1:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/formula1.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/formula1.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/formula1.mrs
+  soho-hulujapan:
+    type: http
+    behavior: classical
+    format: text
+    path: ./rule-providers/soho-public/hulujapan.list
+    url: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/HuluJapan.list
+    proxy: PROXY
+    interval: 86400
   soho-core-ipv4:
     type: inline
     behavior: domain
@@ -245,4 +298,16 @@ rules:
 - RULE-SET,soho-community-ai,REJECT
 - RULE-SET,soho-meta,PROXY
 - RULE-SET,soho-meta,REJECT
+- RULE-SET,soho-netflix,PROXY
+- RULE-SET,soho-netflix,REJECT
+- RULE-SET,soho-hulu,PROXY
+- RULE-SET,soho-hulu,REJECT
+- RULE-SET,soho-spotify,PROXY
+- RULE-SET,soho-spotify,REJECT
+- RULE-SET,soho-twitch,PROXY
+- RULE-SET,soho-twitch,REJECT
+- RULE-SET,soho-formula1,PROXY
+- RULE-SET,soho-formula1,REJECT
+- RULE-SET,soho-hulujapan,PROXY
+- RULE-SET,soho-hulujapan,REJECT
 - MATCH,DIRECT

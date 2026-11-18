@@ -20,6 +20,7 @@ ALIASES = {
     "claude": "anthropic",
     "claudeai": "anthropic",
     "disneyplus": "disney",
+    "f1": "formula1",
     "gmail": "google-mail",
     "grok": "xai",
     "hbo-go-hkg": "hbo",
@@ -88,8 +89,12 @@ def category_key(label):
 
 def reviewed_routes(policy):
     actions = {"direct": "DIRECT", "proxy": "PROXY", "proxy_supplement": "PROXY", "reject": "REJECT"}
-    return {category_key(Path(entry["meta_path"]).stem): actions[entry["policy"]]
-            for entry in policy["sets"] if "meta_path" in entry and entry["kind"] != "ipcidr"}
+    routes = {}
+    for entry in policy["sets"]:
+        source_path = entry.get("meta_path") or entry.get("text_url")
+        if source_path and entry["kind"] != "ipcidr":
+            routes[category_key(Path(source_path).stem)] = actions[entry["policy"]]
+    return routes
 
 
 def decide(label, reviewed):

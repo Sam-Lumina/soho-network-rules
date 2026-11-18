@@ -12,7 +12,7 @@ from urllib.parse import parse_qsl, urlsplit
 
 import yaml
 
-from build_configs import PAGES
+from build_configs import PAGES, COMMUNITY_MEDIA
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,13 +20,15 @@ ROOT_FILES = {".gitignore", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "C
 OTHER_FILES = {
     ".github/workflows/check-and-publish.yml", ".github/workflows/community-catalog.yml",
     "rules/policy.json", "rules/community_sources.json", "tools/build_configs.py",
-    "tools/build_rule_data.py", "tools/check_release.py", "tools/community_catalog.py",
+    "tools/build_rule_data.py", "tools/check_release.py", "tools/community_catalog.py", "tools/build_community_data.py",
 }
 ASSETS = {
     "LICENSE", "THIRD_PARTY_NOTICES.md", "SOURCE.md", "SHA256.json",
     "tif-mini.mrs", "meta-ads.list", "meta-international.list",
 }
 CONFIGS = {"dist/stable/mihomo-merge.yaml", "dist/stable/shadowrocket.conf"}
+COMMUNITY_FILES = {f"dist/{COMMUNITY_MEDIA}", "dist/data/community-v1/SOURCE.md", "dist/data/community-v1/SHA256.json"}
+HULU_JAPAN = "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/HuluJapan.list"
 POLYFORM_SHA256 = "ffcca38841adb694b6f380647e15f17c446a4d1656fed51a1e2041d064c94cc8"
 GPL_SHA256 = "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
 MIT_NOTICE_SHA256 = {
@@ -131,10 +133,17 @@ def shadowrocket_check(files, directory, policy):
         ]
         require(all(len(row) == 2 and row[0] in {"DOMAIN", "DOMAIN-SUFFIX"} and valid_domain(row[1])
                     for row in table[f"{PAGES}/{directory.removeprefix('dist/')}/{leaf}"]), "Malformed Shadowrocket external rules")
+    community = files[f"dist/{COMMUNITY_MEDIA}"]
+    media = json.loads(files["dist/data/community-v1/SHA256.json"])["media.list"]
+    require(sha256(community).hexdigest() == media["sha256"] and len(community) == media["bytes"],
+            "Community media checksum mismatch")
+    table[f"{PAGES}/{COMMUNITY_MEDIA}"] = [line.split(",") for line in community.decode().splitlines()]
+    require(all(len(row) == 2 and row[0] in {"DOMAIN", "DOMAIN-SUFFIX"} and valid_domain(row[1])
+                for row in table[f"{PAGES}/{COMMUNITY_MEDIA}"]), "Malformed community media list")
     upstream = {url for row in policy["sets"] for url in row.get("shadowrocket_urls", ())}
-    require(upstream == {
+    require(upstream == {HULU_JAPAN, *{
                 f"https://raw.githubusercontent.com/poohyeban/shadowrocket-rules/main/rules/{name}/{name}.list"
-                for name in ("Facebook", "Instagram")},
+                for name in ("Facebook", "Instagram")}},
             "Unreviewed Shadowrocket community rule source")
     for row in config[1:-1]:
         require(len(row) == 3 and row[-1] in {"DIRECT", "PROXY", "REJECT"}, "Malformed Shadowrocket rule")
@@ -166,7 +175,8 @@ def shadowrocket_check(files, directory, policy):
     cases = {
         "PROXY": ("chatgpt.com", "api.openai.com", "github.com", "www.google.com", "mail.google.com", "www.youtube.com",
                   "web.telegram.org", "x.com", "www.linkedin.com", "web.whatsapp.com", "claude.ai", "grok.com",
-                  "muse.ai", "auth.muse.ai", "www.facebook.com", "www.instagram.com", "auth.meta.com"),
+                  "muse.ai", "auth.muse.ai", "www.facebook.com", "www.instagram.com", "auth.meta.com",
+                  "www.netflix.com", "open.spotify.com", "www.twitch.tv", "www.formula1.com"),
         "DIRECT": ("www.baidu.com", "www.taobao.com", "fe2cr.update.microsoft.com", "licdn.cn.cdn20.com", "soho-test.invalid"),
         "REJECT": ("doubleclick.net", "googlesyndication.com"),
     }
@@ -177,7 +187,7 @@ def shadowrocket_check(files, directory, policy):
 def check(files):
     policy = json.loads(files["rules/policy.json"])
     directory = "dist/data/" + policy["data_version"]
-    allow = ROOT_FILES | OTHER_FILES | CONFIGS | {f"{directory}/{name}" for name in ASSETS}
+    allow = ROOT_FILES | OTHER_FILES | CONFIGS | COMMUNITY_FILES | {f"{directory}/{name}" for name in ASSETS}
     if set(files) != allow:
         raise ValueError(f"Unexpected paths: {sorted(set(files)-allow)}; missing paths: {sorted(allow-set(files))}")
     require(sha256(files["LICENSE"]).hexdigest() == POLYFORM_SHA256, "Official PolyForm license mismatch")
@@ -212,7 +222,9 @@ def check(files):
     providers = list(merge["rule-providers"].values())
     online = [provider for provider in providers if provider["type"] == "http"]
     require(len(providers) == len(policy["sets"]) + 2 and len(online) == len(policy["sets"]) and
-            all(row["url"].startswith("https://") and row["format"] == "mrs" and row["proxy"] == "PROXY"
+            all(row["url"].startswith("https://") and
+                (row["format"] == "mrs" or (row["url"] == HULU_JAPAN and row["behavior"] == "classical"
+                                            and row["format"] == "text")) and row["proxy"] == "PROXY"
                 and row["interval"] == 86400 and row["path"].startswith("./rule-providers/soho-public/") for row in online),
             "Bad provider inventory")
     for row in online:

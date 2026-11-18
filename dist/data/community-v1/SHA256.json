@@ -1,0 +1,33 @@
+{
+  "media.list": {
+    "sha256": "078e0aa60cd7a971f06b37094d86c5f43539400787946087860ac2c08acd7440",
+    "bytes": 4240,
+    "sources": [
+      {
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/39ef714731b5523b471d6868f8e3e6e83d915611/geo/geosite/netflix.list",
+        "sha256": "aa3e83152b51840332440177399fcae048733419f4dde7a65383757beedf369a",
+        "rules": 24
+      },
+      {
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/39ef714731b5523b471d6868f8e3e6e83d915611/geo/geosite/hulu.list",
+        "sha256": "8afc36039f33c7f1cd1c62ac282ddfdcee429c0c49153de2c7f47536284c2ffa",
+        "rules": 48
+      },
+      {
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/39ef714731b5523b471d6868f8e3e6e83d915611/geo/geosite/spotify.list",
+        "sha256": "cc8ae18677b29c1b741ab47332f3696defe9b059d9a9a8763d7bcb5e28a53076",
+        "rules": 28
+      },
+      {
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/39ef714731b5523b471d6868f8e3e6e83d915611/geo/geosite/twitch.list",
+        "sha256": "05ea7831c1a74ae9928d575b8548728c4ca7a01063a32102c3bbb47509eeb515",
+        "rules": 35
+      },
+      {
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/39ef714731b5523b471d6868f8e3e6e83d915611/geo/geosite/formula1.list",
+        "sha256": "af04c7fde1113220d854276c9c2a83e4ac16c4a881e099cdc5e44a5a5f0652c5",
+        "rules": 3
+      }
+    ]
+  }
+}

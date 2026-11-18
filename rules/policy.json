@@ -188,6 +188,50 @@
         "https://raw.githubusercontent.com/poohyeban/shadowrocket-rules/main/rules/Facebook/Facebook.list",
         "https://raw.githubusercontent.com/poohyeban/shadowrocket-rules/main/rules/Instagram/Instagram.list"
       ]
+    },
+    {
+      "source": "soho-netflix",
+      "policy": "proxy_supplement",
+      "kind": "domain",
+      "meta_path": "geo/geosite/netflix.mrs",
+      "shadowrocket_media": true
+    },
+    {
+      "source": "soho-hulu",
+      "policy": "proxy_supplement",
+      "kind": "domain",
+      "meta_path": "geo/geosite/hulu.mrs",
+      "shadowrocket_media": true
+    },
+    {
+      "source": "soho-spotify",
+      "policy": "proxy_supplement",
+      "kind": "domain",
+      "meta_path": "geo/geosite/spotify.mrs",
+      "shadowrocket_media": true
+    },
+    {
+      "source": "soho-twitch",
+      "policy": "proxy_supplement",
+      "kind": "domain",
+      "meta_path": "geo/geosite/twitch.mrs",
+      "shadowrocket_media": true
+    },
+    {
+      "source": "soho-formula1",
+      "policy": "proxy_supplement",
+      "kind": "domain",
+      "meta_path": "geo/geosite/formula1.mrs",
+      "shadowrocket_media": true
+    },
+    {
+      "source": "soho-hulujapan",
+      "policy": "proxy_supplement",
+      "kind": "domain",
+      "text_url": "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/HuluJapan.list",
+      "shadowrocket_urls": [
+        "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/HuluJapan.list"
+      ]
     }
   ],
   "direct_exceptions": [

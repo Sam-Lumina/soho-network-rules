@@ -12,6 +12,7 @@ POLICY = ROOT / "rules/policy.json"
 META = "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat"
 HAGEZI = "https://raw.githubusercontent.com/hagezi/dns-blocklists"
 PAGES = "https://sam-lumina.github.io/soho-network-rules"
+COMMUNITY_MEDIA = "data/community-v1/media.list"
 PACKAGE = r"(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_"
 SIGNED_FAMILY = r"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\"
 
@@ -38,6 +39,13 @@ def windows(policy):
     providers = {}
     for row in policy["sets"]:
         name = row["source"]
+        if "text_url" in row:
+            providers[name] = {
+                "type": "http", "behavior": "classical", "format": "text",
+                "path": f"./rule-providers/soho-public/{name.removeprefix('soho-')}.list",
+                "url": row["text_url"], "proxy": "PROXY", "interval": 86400,
+            }
+            continue
         address = data_url(policy, "tif-mini.mrs") if row["kind"] == "threat" else f"{META}/meta/{row['meta_path']}"
         providers[name] = {
             "type": "http",
@@ -116,6 +124,8 @@ def shadowrocket(policy):
         "DOMAIN-SUFFIX,microsoft.com,DIRECT",
         "DOMAIN-SUFFIX,windowsupdate.com,DIRECT",
     ]
+    if any(row.get("shadowrocket_media") for row in policy["sets"]):
+        rules.append(f"RULE-SET,{PAGES}/{COMMUNITY_MEDIA},PROXY")
     rules.extend("RULE-SET," + url + ",PROXY"
                  for row in policy["sets"] for url in row.get("shadowrocket_urls", ()))
     rules.append("FINAL," + policy["fallback"])
