@@ -130,6 +130,9 @@ def shadowrocket_check(files, directory, policy):
         ]
         require(all(len(row) == 2 and row[0] in {"DOMAIN", "DOMAIN-SUFFIX"} and valid_domain(row[1])
                     for row in table[f"{PAGES}/{directory.removeprefix('dist/')}/{leaf}"]), "Malformed Shadowrocket external rules")
+    upstream = {row["shadowrocket_url"] for row in policy["sets"] if "shadowrocket_url" in row}
+    require(upstream == {"https://raw.githubusercontent.com/poohyeban/shadowrocket-rules/main/rules/Facebook/Facebook.list"},
+            "Unreviewed Shadowrocket community rule source")
     for row in config[1:-1]:
         require(len(row) == 3 and row[-1] in {"DIRECT", "PROXY", "REJECT"}, "Malformed Shadowrocket rule")
         kind, item, outcome = row
@@ -138,7 +141,7 @@ def shadowrocket_check(files, directory, policy):
                     f"https://raw.githubusercontent.com/hagezi/dns-blocklists/{policy['threat_snapshot']}/wildcard/tif.mini-onlydomains.txt",
                     "Unexpected Shadowrocket threat source")
         elif kind == "RULE-SET":
-            require(item in table, "Unknown Shadowrocket external rule list")
+            require(item in table or (item in upstream and outcome == "PROXY"), "Unknown Shadowrocket external rule list")
         else:
             require(kind in {"DOMAIN", "DOMAIN-SUFFIX"} and valid_domain(item), "Unknown Shadowrocket rule type")
 
@@ -151,7 +154,7 @@ def shadowrocket_check(files, directory, policy):
             if rule[0] == "FINAL":
                 return rule[1]
             kind, target, action = rule
-            if kind == "RULE-SET" and any(matches(*entry, host) for entry in table[target]):
+            if kind == "RULE-SET" and any(matches(*entry, host) for entry in table.get(target, ())):
                 return action
             if kind in {"DOMAIN", "DOMAIN-SUFFIX"} and matches(kind, target, host):
                 return action
@@ -159,7 +162,8 @@ def shadowrocket_check(files, directory, policy):
 
     cases = {
         "PROXY": ("chatgpt.com", "api.openai.com", "github.com", "www.google.com", "mail.google.com", "www.youtube.com",
-                  "web.telegram.org", "x.com", "www.linkedin.com", "web.whatsapp.com", "claude.ai", "grok.com"),
+                  "web.telegram.org", "x.com", "www.linkedin.com", "web.whatsapp.com", "claude.ai", "grok.com",
+                  "muse.ai", "auth.muse.ai", "www.facebook.com"),
         "DIRECT": ("www.baidu.com", "www.taobao.com", "fe2cr.update.microsoft.com", "licdn.cn.cdn20.com", "soho-test.invalid"),
         "REJECT": ("doubleclick.net", "googlesyndication.com"),
     }
@@ -204,7 +208,7 @@ def check(files):
             and proxy["default-selected"] == "REJECT", "Unsafe selector")
     providers = list(merge["rule-providers"].values())
     online = [provider for provider in providers if provider["type"] == "http"]
-    require(len(providers) == 17 and len(online) == 15 and
+    require(len(providers) == len(policy["sets"]) + 2 and len(online) == len(policy["sets"]) and
             all(row["url"].startswith("https://") and row["format"] == "mrs" and row["proxy"] == "PROXY"
                 and row["interval"] == 86400 and row["path"].startswith("./rule-providers/soho-public/") for row in online),
             "Bad provider inventory")
@@ -213,6 +217,10 @@ def check(files):
             require("dist/" + row["url"].removeprefix(PAGES + "/") in files, "Missing Pages rule artifact")
     rules = merge["rules"]
     require(rules[-1] == "MATCH,DIRECT" and sum(row.startswith("MATCH,") for row in rules) == 1, "Unexpected final rule")
+    supplemental = [row["source"] for row in policy["sets"] if row["policy"] == "proxy_supplement"]
+    require(rules[-1 - 2*len(supplemental):-1] ==
+            [f"RULE-SET,{source},{action}" for source in supplemental for action in ("PROXY", "REJECT")],
+            "Community rules must follow existing routes and reject when proxy cannot carry a match")
     shadowrocket_check(files, directory, policy)
     print(f"Checked {len(files)} approved files, license texts, providers and Shadowrocket sample routes.")
 

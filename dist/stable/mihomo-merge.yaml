@@ -152,6 +152,24 @@ rule-providers:
     proxy: PROXY
     interval: 86400
     path-in-bundle: geo/geoip/cn.mrs
+  soho-community-ai:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/community-ai.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ai-!cn.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/category-ai-!cn.mrs
+  soho-facebook:
+    type: http
+    behavior: domain
+    format: mrs
+    path: ./rule-providers/soho-public/facebook.mrs
+    url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/facebook.mrs
+    proxy: PROXY
+    interval: 86400
+    path-in-bundle: geo/geosite/facebook.mrs
   soho-core-ipv4:
     type: inline
     behavior: domain
@@ -200,6 +218,9 @@ rule-providers:
     - www.grok.com
     - grok.x.com
     - api.x.ai
+    - muse.ai
+    - auth.muse.ai
+    - www.facebook.com
 rules:
 - RULE-SET,soho-threat,REJECT
 - RULE-SET,soho-ads,REJECT
@@ -218,4 +239,8 @@ rules:
 - RULE-SET,soho-microsoft,DIRECT
 - RULE-SET,soho-cn,DIRECT
 - RULE-SET,soho-geoip-cn,DIRECT,no-resolve
+- RULE-SET,soho-community-ai,PROXY
+- RULE-SET,soho-community-ai,REJECT
+- RULE-SET,soho-facebook,PROXY
+- RULE-SET,soho-facebook,REJECT
 - MATCH,DIRECT

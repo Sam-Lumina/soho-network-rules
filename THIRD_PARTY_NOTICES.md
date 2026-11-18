@@ -9,6 +9,7 @@
 | [Loyalsoldier domain-list-custom](https://github.com/Loyalsoldier/domain-list-custom) | MetaCubeX 使用的域名构建工具，采用 MIT。本仓库保留构建链声明。 [上游 MIT](https://github.com/Loyalsoldier/domain-list-custom/blob/master/LICENSE) |
 | [felixonmars/dnsmasq-china-list](https://github.com/felixonmars/dnsmasq-china-list) | V2Fly 的 Google 分类引用了其域名数据，采用 WTFPL-2.0。 [固定版本许可](https://github.com/felixonmars/dnsmasq-china-list/blob/94f89bb5065cdff0777ef3a116ecfecb14ca1f56/LICENSE) |
 | [HaGeZi DNS Blocklists](https://github.com/hagezi/dns-blocklists) | Windows 使用固定 GPL-3.0 数据转换的 MRS，Shadowrocket 引用同一版本的原始文本。 [固定版本的再分发条款](https://github.com/hagezi/dns-blocklists/blob/e681da879e1b4aaed4962170d0e278d6817542df/README.md#disclaimer) |
+| [poohyeban/shadowrocket-rules](https://github.com/poohyeban/shadowrocket-rules) | Shadowrocket 从上游直接获取 Facebook 域名规则。上游项目采用 MIT，并记录 V2Fly 和 SukkaW 数据来源。 [许可证](https://github.com/poohyeban/shadowrocket-rules/blob/main/LICENSE) |
 
 规则数据的 [随包版权与许可声明](dist/data/p2.9/THIRD_PARTY_NOTICES.md)、[GPL-3.0 全文](dist/data/p2.9/LICENSE) 和 [来源与复现步骤](dist/data/p2.9/SOURCE.md) 随 Pages 数据发布。规则数据构建脚本 `tools/build_rule_data.py` 采用 GPL-3.0。
 

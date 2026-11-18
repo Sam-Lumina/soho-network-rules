@@ -54,8 +54,10 @@ def windows(policy):
     protected = {}
     for ipv4, key in ((True, "soho-core-ipv4"), (False, "soho-core-international")):
         rows = [row for row in policy["sets"] if row["policy"] == "proxy" and row["windows_ipv4_only"] == ipv4]
-        hosts = list(dict.fromkeys(value for row in rows for value in row["domains"]))
-        providers[key] = {"type": "inline", "behavior": "domain", "payload": hosts}
+        hosts = [value for row in rows for value in row["domains"]]
+        if not ipv4:
+            hosts.extend(policy["proxy_exceptions"])
+        providers[key] = {"type": "inline", "behavior": "domain", "payload": list(dict.fromkeys(hosts))}
         protected[ipv4] = logic("OR", "RULE-SET," + key, *("RULE-SET," + row["source"] for row in rows))
 
     # Public P2.9 retains the P2.8 rule order and exact Windows package allowlist.
@@ -78,6 +80,10 @@ def windows(policy):
         if row["policy"] == "direct":
             suffix = ",no-resolve" if row["kind"] == "ipcidr" else ""
             rules.append("RULE-SET," + row["source"] + ",DIRECT" + suffix)
+    for row in policy["sets"]:
+        if row["policy"] == "proxy_supplement":
+            rules.append("RULE-SET," + row["source"] + ",PROXY")
+            rules.append("RULE-SET," + row["source"] + ",REJECT")
     rules.append("MATCH," + policy["fallback"])
     return {
         "find-process-mode": "strict",
@@ -104,12 +110,15 @@ def shadowrocket(policy):
             rules.extend(domain_rule(host) + ",DIRECT" for host in policy["direct_exceptions"])
         rules.extend(domain_rule(host) + ",PROXY" for row in rows if row["windows_ipv4_only"] == ipv4_only
                      for host in row["domains"])
+    rules.extend(domain_rule(host) + ",PROXY" for host in policy["proxy_exceptions"])
     rules += [
         "RULE-SET," + data_url(policy, "meta-international.list") + ",PROXY",
         "DOMAIN-SUFFIX,microsoft.com,DIRECT",
         "DOMAIN-SUFFIX,windowsupdate.com,DIRECT",
-        "FINAL," + policy["fallback"],
     ]
+    rules.extend("RULE-SET," + row["shadowrocket_url"] + ",PROXY"
+                 for row in policy["sets"] if "shadowrocket_url" in row)
+    rules.append("FINAL," + policy["fallback"])
     return "\n".join(rules) + "\n"
 
 

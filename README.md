@@ -13,7 +13,7 @@ SOHO Network Rules 为 Clash Verge Rev / Mihomo 和 Shadowrocket 提供一套通
 
 1. 保留原订阅。在 Clash Verge「订阅」创建一份单独的 Remote，使用你自己的订阅地址。自管节点也可存放在自己的 Local 配置。
 2. 下载 Merge 文件，将完整内容粘贴到这份订阅的「编辑扩展配置」，保存并选中该订阅。这个文件需要绑定到已有节点的配置。
-3. 在「代理」页的 **PROXY** 组选择可用节点，再从「规则」页刷新规则集。确认 15 个远程规则集及两个内联规则集均已加载后，用 Rule + TUN，系统代理关闭。临时切全局时继续使用同一个 PROXY。
+3. 在「代理」页的 **PROXY** 组选择可用节点，再从「规则」页刷新规则集。确认 17 个远程规则集及两个内联规则集均已加载后，用 Rule + TUN，系统代理关闭。临时切全局时继续使用同一个 PROXY。
 
 Windows 已在 Clash Verge Rev 2.5.10 / Mihomo 1.19.33 上实机验证 Rule + TUN 和 Global + TUN，系统代理关闭。节点订阅按客户端设置更新，15 个远程规则集每 24 小时检查。Merge 有新版时，可从同一地址下载并替换订阅扩展。联网异常时可选回原订阅。
 
@@ -26,6 +26,8 @@ Windows 已在 Clash Verge Rev 2.5.10 / Mihomo 1.19.33 上实机验证 Rule + TU
 3. 将「全局路由」设为「配置」。点配置文件名，再点「更新」，可手动刷新整份配置。
 
 Shadowrocket 2.2.93 和 2.2.76 均已实机导入、选用和手动更新。两台验收设备均已在 Shadowrocket「设置 → 更新 → 配置」开启自动后台更新，间隔为 7 天，并允许 iOS 后台 App 刷新。首次后台自动更新尚待观察。
+
+Windows 直接跟随 MetaCubeX 的国外 AI 和 Facebook 分类更新，现有国内和 Microsoft 规则优先于这两个补充分类。Shadowrocket 直接订阅社区维护的 Facebook 域名清单。两端在配置中保留 Muse 首页、认证及 Facebook 登录的已验证主机。
 
 ## 已知限制
 

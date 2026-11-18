@@ -168,12 +168,34 @@
       "domains": [],
       "windows_ipv4_only": false,
       "meta_path": "geo/geoip/cn.mrs"
+    },
+    {
+      "source": "soho-community-ai",
+      "policy": "proxy_supplement",
+      "kind": "domain",
+      "domains": [],
+      "windows_ipv4_only": false,
+      "meta_path": "geo/geosite/category-ai-!cn.mrs"
+    },
+    {
+      "source": "soho-facebook",
+      "policy": "proxy_supplement",
+      "kind": "domain",
+      "domains": [],
+      "windows_ipv4_only": false,
+      "meta_path": "geo/geosite/facebook.mrs",
+      "shadowrocket_url": "https://raw.githubusercontent.com/poohyeban/shadowrocket-rules/main/rules/Facebook/Facebook.list"
     }
   ],
   "direct_exceptions": [
     "licdn.cn.cdn20.com",
     "+.licdn.cn",
     "+.linkedin.cn"
+  ],
+  "proxy_exceptions": [
+    "muse.ai",
+    "auth.muse.ai",
+    "www.facebook.com"
   ],
   "ad_exceptions": [],
   "fallback": "DIRECT",
