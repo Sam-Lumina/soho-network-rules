@@ -101,6 +101,8 @@ def reviewed_routes(policy):
                "proxy_category": "PROXY", "reject": "REJECT"}
     routes = {}
     for entry in policy["sets"]:
+        if entry["kind"] == "advertising" and not policy["modules"]["ads"]["enabled"]:
+            continue
         source_path = entry.get("meta_path") or entry.get("text_url")
         if source_path and entry["kind"] != "ipcidr":
             routes[category_key(Path(source_path).stem)] = actions[entry["policy"]]

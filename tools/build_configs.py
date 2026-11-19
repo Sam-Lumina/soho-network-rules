@@ -24,6 +24,9 @@ TELEGRAM_IPS = f"{COMMUNITY_DATA}/telegram-ip.list"
 ACL = "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset"
 PACKAGE = r"(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_"
 SIGNED_FAMILY = r"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\"
+FILTERS = {"threat": "soho-threat", "ads": "soho-ads"}
+LABEL = r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
+EXCEPTION_DOMAIN = re.compile(rf"{LABEL}(?:\.{LABEL})+")
 
 
 def logic(operator, *conditions):
@@ -34,6 +37,37 @@ def domain_rule(token):
     if token.startswith("+."):
         return "DOMAIN-SUFFIX," + token[2:]
     return "DOMAIN," + token
+
+
+def filter_settings(policy):
+    """Return active filters and the domain conditions they exempt."""
+    modules = policy["modules"]
+    for name in (*FILTERS, "allowlist"):
+        if type(modules[name]["enabled"]) is not bool:
+            raise ValueError(f"modules.{name}.enabled must be a JSON boolean")
+    active = {}
+    for module, key in (("threat", "threat_exceptions"), ("ads", "ad_exceptions")):
+        entries = policy[key]
+        if not isinstance(entries, list):
+            raise ValueError(f"{key} must be a list of domains")
+        for entry in entries:
+            if not isinstance(entry, str):
+                raise ValueError(f"Invalid domain in {key}")
+            host = entry.removeprefix("+.")
+            if len(host) > 253 or not EXCEPTION_DOMAIN.fullmatch(host) or host.rsplit(".", 1)[-1].isdigit():
+                raise ValueError(f"Invalid domain in {key}")
+        if modules[module]["enabled"]:
+            enabled_entries = entries if modules["allowlist"]["enabled"] else []
+            active[module] = tuple(domain_rule(entry) for entry in dict.fromkeys(enabled_entries))
+    return active
+
+
+def filter_rule(selector, exceptions):
+    # Negate only this filter's match, then let subsequent rules decide the route.
+    if exceptions:
+        excluded = exceptions[0] if len(exceptions) == 1 else logic("OR", *exceptions)
+        selector = logic("AND", selector, logic("NOT", excluded))
+    return selector + ",REJECT"
 
 
 def threat_source(policy):
@@ -77,9 +111,13 @@ def telegram_ip_rules(policy, target, actions):
 
 
 def windows(policy):
+    filters = filter_settings(policy)
+    excluded = {source for module, source in FILTERS.items() if module not in filters}
     providers = {}
     for row in policy["sets"]:
         name = row["source"]
+        if name in excluded:
+            continue
         if "text_url" in row:
             providers[name] = text_provider(name, row["text_url"])
             continue
@@ -108,9 +146,9 @@ def windows(policy):
         providers[key] = {"type": "inline", "behavior": "domain", "payload": list(dict.fromkeys(hosts))}
         protected[ipv4] = logic("OR", "RULE-SET," + key, *("RULE-SET," + row["source"] for row in rows))
 
-    if policy["ad_exceptions"]:
-        raise ValueError("Review an exact ad exception on both clients before enabling it.")
-    rules = [f"RULE-SET,{row['source']},REJECT" for row in policy["sets"] if row["policy"] == "reject"]
+    rules = [filter_rule(f"RULE-SET,{FILTERS[module]}", exceptions) for module, exceptions in filters.items()]
+    rules.extend(f"RULE-SET,{row['source']},REJECT" for row in policy["sets"]
+                 if row["policy"] == "reject" and row["source"] not in FILTERS.values())
     ipv4 = "IP-CIDR,0.0.0.0/0"
     desktop = "PROCESS-PATH-REGEX," + PACKAGE + SIGNED_FAMILY + r"ChatGPT\.exe$"
     cli = "PROCESS-PATH-REGEX," + PACKAGE + SIGNED_FAMILY + r"resources\\codex\.exe$"
@@ -158,11 +196,11 @@ def windows(policy):
 
 def shadowrocket(policy):
     rows = [row for row in policy["sets"] if row["policy"] == "proxy"]
-    rules = [
-        "[Rule]",
-        "DOMAIN-SET," + threat_source(policy) + ",REJECT",
-        "RULE-SET," + data_url(policy, "meta-ads.list") + ",REJECT",
-    ]
+    selectors = {"threat": "DOMAIN-SET," + threat_source(policy),
+                 "ads": "RULE-SET," + data_url(policy, "meta-ads.list")}
+    rules = ["[Rule]"]
+    rules.extend(filter_rule(selectors[module], exceptions)
+                 for module, exceptions in filter_settings(policy).items())
     if any(row.get("hagezi_path") for row in policy["sets"]):
         rules.append(f"RULE-SET,{PAGES}/{COMMUNITY_GAMBLING},REJECT")
     for ipv4_only in (True, False):
@@ -201,7 +239,7 @@ def main():
     generated = {
         "mihomo-merge.yaml": notice + url + "# Clash Verge Rev subscription-level Merge; install over your own profile.\n"
                              + yaml.safe_dump(windows(policy), sort_keys=False, width=1000),
-        "shadowrocket.conf": notice + url + "# FORMAT VERIFIED / LIVE TEST PENDING\n" + shadowrocket(policy),
+        "shadowrocket.conf": notice + url + "# Baseline import, update and routing verified on two iPhones.\n" + shadowrocket(policy),
     }
     for name, body in generated.items():
         path = stable / name

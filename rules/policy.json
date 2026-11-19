@@ -285,7 +285,13 @@
     "www.instagram.com",
     "auth.meta.com"
   ],
+  "modules": {
+    "ads": {"enabled": true},
+    "threat": {"enabled": true},
+    "allowlist": {"enabled": true}
+  },
   "ad_exceptions": [],
+  "threat_exceptions": [],
   "fallback": "DIRECT",
   "data_version": "p2.9",
   "meta_snapshot": "1916b151c3661fc74f709ac69c271ff9ae912027",

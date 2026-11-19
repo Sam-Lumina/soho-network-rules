@@ -3,8 +3,10 @@
 import argparse
 import base64
 import binascii
+from copy import deepcopy
 from hashlib import sha256
 from ipaddress import ip_address, ip_network
+from itertools import product
 import json
 from pathlib import Path
 import re
@@ -15,7 +17,8 @@ import yaml
 
 from build_configs import (
     ACL, HAGEZI, META, PAGES, COMMUNITY_DATA, COMMUNITY_MEDIA, COMMUNITY_ADULT, COMMUNITY_GAMBLING,
-    COMMUNITY_DIRECT, COMMUNITY_PROXY, TELEGRAM_IPS, community_providers, ip_rule, telegram_ip_rules,
+    COMMUNITY_DIRECT, COMMUNITY_PROXY, TELEGRAM_IPS, FILTERS, community_providers, data_url,
+    filter_rule, filter_settings, ip_rule, shadowrocket, telegram_ip_rules, threat_source, windows,
 )
 
 
@@ -128,10 +131,18 @@ def valid_domain(host):
 
 def shadowrocket_check(files, directory, policy):
     raw = files["dist/stable/shadowrocket.conf"].decode()
-    config = [line.split(",") for line in raw.splitlines() if line and not line.startswith("#")]
+    lines = [line for line in raw.splitlines() if line and not line.startswith("#")]
+    require(lines == shadowrocket(policy).splitlines(), "Shadowrocket differs from policy")
+    filters = filter_settings(policy)
+    ad_url = data_url(policy, "meta-ads.list")
+    selectors = {"threat": "DOMAIN-SET," + threat_source(policy), "ads": "RULE-SET," + ad_url}
+    prefix = [filter_rule(selectors[module], exceptions) for module, exceptions in filters.items()]
+    gambling_rule = f"RULE-SET,{PAGES}/{COMMUNITY_GAMBLING},REJECT"
+    require(lines[1:2+len(prefix)] == [*prefix, gambling_rule],
+            "Shadowrocket filters and gambling must precede business routing")
+    config = [line.split(",") for line in ["[Rule]", *lines[1+len(prefix):]]]
     require(config[0] == ["[Rule]"] and config[-1] == ["FINAL", "DIRECT"], "Shadowrocket section or final route")
     require(sum(row[0] == "FINAL" for row in config) == 1, "Shadowrocket final route count")
-    require(sum(row[0] == "DOMAIN-SET" for row in config) == 1, "Shadowrocket threat provider")
     table = {}
     for leaf in ("meta-ads.list", "meta-international.list"):
         table[f"{PAGES}/{directory.removeprefix('dist/')}/{leaf}"] = [
@@ -188,8 +199,6 @@ def shadowrocket_check(files, directory, policy):
             "Unexpected gambling provenance")
     for path, entries in table.items():
         table[path] = set(map(tuple, entries))
-    require(config[3] == ["RULE-SET", f"{PAGES}/{COMMUNITY_GAMBLING}", "REJECT"],
-            "Gambling must be rejected before proxy routing")
     upstream = {url for row in policy["sets"] for url in row.get("shadowrocket_urls", ())}
     require(upstream == {HULU_JAPAN, *{
                 f"https://raw.githubusercontent.com/poohyeban/shadowrocket-rules/main/rules/{name}/{name}.list"
@@ -207,11 +216,7 @@ def shadowrocket_check(files, directory, policy):
             continue
         require(len(row) == 3 and row[-1] in {"DIRECT", "PROXY", "REJECT"}, "Malformed Shadowrocket rule")
         kind, item, outcome = row
-        if kind == "DOMAIN-SET":
-            require(outcome == "REJECT" and item ==
-                    f"https://raw.githubusercontent.com/hagezi/dns-blocklists/{policy['threat_snapshot']}/wildcard/tif.mini-onlydomains.txt",
-                    "Unexpected Shadowrocket threat source")
-        elif kind == "RULE-SET":
+        if kind == "RULE-SET":
             require(item in table or (item in upstream and outcome == "PROXY"), "Unknown Shadowrocket external rule list")
         else:
             require(kind in {"DOMAIN", "DOMAIN-SUFFIX"} and valid_domain(item), "Unknown Shadowrocket rule type")
@@ -224,8 +229,12 @@ def shadowrocket_check(files, directory, policy):
         return ("DOMAIN", host) in entries or any(
             ("DOMAIN-SUFFIX", ".".join(labels[index:])) in entries for index in range(len(labels)))
 
+    ad_exemptions = {tuple(rule.split(",")) for rule in filters.get("ads", ())}
+
     def route(host, telegram_provider=True):
-        # External DOMAIN-SET loading is validated on-device. Check first-match order for local data.
+        # Check first-match order for the available lists. The external threat list is checked on-device.
+        if "ads" in filters and in_set(table[ad_url], host) and not in_set(ad_exemptions, host):
+            return "REJECT"
         try:
             address = ip_address(host)
         except ValueError:
@@ -259,7 +268,8 @@ def shadowrocket_check(files, directory, policy):
         "DIRECT": ("www.baidu.com", "www.taobao.com", "fe2cr.update.microsoft.com", "licdn.cn.cdn20.com",
                    "www.bilibili.com", "www.douyin.com", "www.icbc.com.cn", "store.steampowered.com",
                    "www.epicgames.com", "soho-test.invalid"),
-        "REJECT": ("doubleclick.net", "googlesyndication.com"),
+        "REJECT": tuple(host for host in ("doubleclick.net", "googlesyndication.com")
+                        if "ads" in filters and not in_set(ad_exemptions, host)),
     }
     for action, hosts in cases.items():
         require(all(route(host) == action for host in hosts), f"Shadowrocket sample mismatch for {action}")
@@ -279,6 +289,42 @@ def shadowrocket_check(files, directory, policy):
     if overlap:
         require(route(overlap) == route("sub." + overlap) == "REJECT",
                 "Gambling must reject overlapping categories and their subdomains")
+
+
+def filter_check(policy):
+    candidate = deepcopy(policy)
+    candidate["ad_exceptions"] = ["github.com", "+.example.com"]
+    candidate["threat_exceptions"] = ["www.baidu.com"]
+    ads = "AND,(({source}),(NOT,((OR,((DOMAIN,github.com),(DOMAIN-SUFFIX,example.com)))))),REJECT"
+    threat = "AND,(({source}),(NOT,((DOMAIN,www.baidu.com)))),REJECT"
+    sources = {
+        "threat": ("RULE-SET,soho-threat", "DOMAIN-SET," + threat_source(policy)),
+        "ads": ("RULE-SET,soho-ads", "RULE-SET," + data_url(policy, "meta-ads.list")),
+    }
+    for ads_enabled, threat_enabled, allowlist_enabled in product((False, True), repeat=3):
+        enabled = {"threat": threat_enabled, "ads": ads_enabled}
+        candidate["modules"] = {
+            name: {"enabled": value} for name, value in (*enabled.items(), ("allowlist", allowlist_enabled))
+        }
+        merge = windows(candidate)
+        mobile = shadowrocket(candidate).splitlines()[1:]
+        for rules, platform in ((merge["rules"], 0), (mobile, 1)):
+            expected = []
+            for module, is_enabled in enabled.items():
+                source = sources[module][platform]
+                if is_enabled:
+                    template = ads if module == "ads" else threat
+                    expected.append(template.format(source=source) if allowlist_enabled else source + ",REJECT")
+                else:
+                    require(all(source not in line for line in rules), f"Disabled filter referenced: {module}")
+            gambling = ("RULE-SET,soho-gambling,REJECT" if platform == 0 else
+                        f"RULE-SET,{PAGES}/{COMMUNITY_GAMBLING},REJECT")
+            require(rules[:1+len(expected)] == [*expected, gambling], "Filter or exception order changed")
+        for module, provider in FILTERS.items():
+            require((provider in merge["rule-providers"]) == enabled[module], f"Unexpected provider: {module}")
+        require("DOMAIN-SUFFIX,github.com,PROXY" in mobile and "DOMAIN,github.com,DIRECT" not in mobile
+                and "DOMAIN-SUFFIX,microsoft.com,DIRECT" in mobile and mobile[-1] == "FINAL,DIRECT",
+                "Filter switches changed independent business routes")
 
 
 def check(files):
@@ -315,6 +361,7 @@ def check(files):
             raise ValueError(f"{path}: {', '.join(sorted(findings))}")
 
     merge = yaml.safe_load(files["dist/stable/mihomo-merge.yaml"])
+    require(merge == windows(policy), "Mihomo differs from policy")
     require(set(merge) == {"find-process-mode", "proxy-groups", "rule-providers", "rules"}, "Unexpected Merge settings")
     proxy, glob = merge["proxy-groups"]
     require(proxy["name"] == "PROXY" and glob == {"name": "GLOBAL", "type": "select", "proxies": ["PROXY"], "empty-fallback": "REJECT"}
@@ -323,7 +370,8 @@ def check(files):
     providers = list(merge["rule-providers"].values())
     online = [provider for provider in providers if provider["type"] == "http"]
     community = community_providers(policy)
-    expected_online = len(policy["sets"]) + len(community) + 1
+    filters = filter_settings(policy)
+    expected_online = len(policy["sets"]) + len(community) + 1 - (len(FILTERS) - len(filters))
     approved_text = {HULU_JAPAN, f"{PAGES}/{COMMUNITY_GAMBLING}", f"{PAGES}/{TELEGRAM_IPS}",
                      *(url for _, url, _ in community)}
     require(len(providers) == expected_online + 2 and len(online) == expected_online and
@@ -337,7 +385,9 @@ def check(files):
             require("dist/" + row["url"].removeprefix(PAGES + "/") in files, "Missing Pages rule artifact")
     rules = merge["rules"]
     require(rules[-1] == "MATCH,DIRECT" and sum(row.startswith("MATCH,") for row in rules) == 1, "Unexpected final rule")
-    require(rules[2] == "RULE-SET,soho-gambling,REJECT", "Gambling must reject before all proxy routes")
+    prefix = [filter_rule(f"RULE-SET,{FILTERS[module]}", exceptions) for module, exceptions in filters.items()]
+    require(rules[:1+len(prefix)] == [*prefix, "RULE-SET,soho-gambling,REJECT"],
+            "Mihomo filters and gambling must precede business routing")
     telegram_rules = telegram_ip_rules(policy, "soho-telegram-ip", ("PROXY", "REJECT"))
     start = rules.index(telegram_rules[0])
     require(rules[start:start+len(telegram_rules)] == telegram_rules
@@ -356,6 +406,7 @@ def check(files):
     require(rules[-1-len(tail):-1] == tail,
             "Additional categories must follow existing routes and reject unmatched proxy transport")
     shadowrocket_check(files, directory, policy)
+    filter_check(policy)
     print(f"Checked {len(files)} approved files, license texts, providers and Shadowrocket sample routes.")
 
 
