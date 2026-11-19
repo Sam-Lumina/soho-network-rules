@@ -102,6 +102,12 @@
         "www.google.com",
         "mail.google.com",
         "accounts.google.com",
+        "gemini.google",
+        "gemini.google.com",
+        "geminiweb-pa.clients.google.com",
+        "geminiweb-pa.clients6.google.com",
+        "aistudio.google.com",
+        "generativelanguage.googleapis.com",
         "+.gmail.com"
       ],
       "windows_ipv4_only": false,
@@ -258,7 +264,7 @@
   },
   "community": {
     "proxy_meta": [
-      "abema", "apple-tvplus", "bbc", "bluesky", "dazn", "deezer", "discord",
+      "abema", "apple-tvplus", "bbc", "bluesky", "category-ai-!cn", "dazn", "deezer", "discord",
       "discoveryplus", "disney", "espn", "huggingface", "hotstar",
       "internet-archive", "hbo", "line", "mytvsuper", "niconico", "perplexity",
       "pinterest", "primevideo", "reddit", "signal", "soundcloud", "threads",
@@ -276,14 +282,23 @@
   "direct_exceptions": [
     "licdn.cn.cdn20.com",
     "+.licdn.cn",
-    "+.linkedin.cn"
+    "+.linkedin.cn",
+    "+.copilot.microsoft.com",
+    "+.copilot.com",
+    "+.copilot.cloud.microsoft",
+    "+.copilot-stg.com"
   ],
   "proxy_exceptions": [
     "muse.ai",
     "auth.muse.ai",
     "www.facebook.com",
     "www.instagram.com",
-    "auth.meta.com"
+    "auth.meta.com",
+    "+.coderabbit.gallery.vsassets.io",
+    "+.kimi.ai",
+    "+.moonshot.ai",
+    "+.minimax.io",
+    "+.qoder.com"
   ],
   "modules": {
     "ads": {"enabled": true},

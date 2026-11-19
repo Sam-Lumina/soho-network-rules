@@ -336,6 +336,12 @@ rule-providers:
     - www.google.com
     - mail.google.com
     - accounts.google.com
+    - gemini.google
+    - gemini.google.com
+    - geminiweb-pa.clients.google.com
+    - geminiweb-pa.clients6.google.com
+    - aistudio.google.com
+    - generativelanguage.googleapis.com
     - +.gmail.com
     - linkedin.com
     - www.linkedin.com
@@ -357,6 +363,11 @@ rule-providers:
     - www.facebook.com
     - www.instagram.com
     - auth.meta.com
+    - +.coderabbit.gallery.vsassets.io
+    - +.kimi.ai
+    - +.moonshot.ai
+    - +.minimax.io
+    - +.qoder.com
 rules:
 - RULE-SET,soho-threat,REJECT
 - RULE-SET,soho-ads,REJECT
@@ -369,6 +380,10 @@ rules:
 - DOMAIN,licdn.cn.cdn20.com,DIRECT
 - DOMAIN-SUFFIX,licdn.cn,DIRECT
 - DOMAIN-SUFFIX,linkedin.cn,DIRECT
+- DOMAIN-SUFFIX,copilot.microsoft.com,DIRECT
+- DOMAIN-SUFFIX,copilot.com,DIRECT
+- DOMAIN-SUFFIX,copilot.cloud.microsoft,DIRECT
+- DOMAIN-SUFFIX,copilot-stg.com,DIRECT
 - OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube),(RULE-SET,soho-telegram),(RULE-SET,soho-twitter),(RULE-SET,soho-google),(RULE-SET,soho-linkedin),(RULE-SET,soho-whatsapp),(RULE-SET,soho-anthropic),(RULE-SET,soho-xai)),PROXY
 - OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube),(RULE-SET,soho-telegram),(RULE-SET,soho-twitter),(RULE-SET,soho-google),(RULE-SET,soho-linkedin),(RULE-SET,soho-whatsapp),(RULE-SET,soho-anthropic),(RULE-SET,soho-xai)),REJECT
 - RULE-SET,soho-telegram-ip,PROXY,no-resolve

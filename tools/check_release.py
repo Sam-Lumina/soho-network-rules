@@ -185,7 +185,8 @@ def shadowrocket_check(files, directory, policy):
         name = f"services-{disposition}.list"
         paths = set()
         for source in manifest[name]["sources"]:
-            match = re.fullmatch(re.escape(META) + r"/[a-f0-9]{40}/geo/geosite/([a-z0-9-]+)\.list", source["url"])
+            match = re.fullmatch(re.escape(META) + r"/[a-f0-9]{40}/geo/geosite/([a-z0-9-]+(?:![a-z0-9-]+)?)\.list",
+                                 source["url"])
             require(match and source["rules"] > 0 and re.fullmatch(r"[a-f0-9]{64}", source["sha256"]),
                     "Unreviewed MetaCubeX source or checksum")
             paths.add(match[1])
@@ -264,11 +265,17 @@ def shadowrocket_check(files, directory, policy):
                   "www.tiktok.com", "www.perplexity.ai", "huggingface.co", "www.reddit.com", "www.wikipedia.org",
                   "gateway.discord.gg", "cdn.discordapp.com", "antigravity.google", "accounts.google.com",
                   "oauth2.googleapis.com", "cloudcode-pa.googleapis.com", "daily-cloudcode-pa.googleapis.com",
-                  "jetski-webchannel.googleapis.com"),
+                  "jetski-webchannel.googleapis.com", "gemini.google", "gemini.google.com",
+                  "geminiweb-pa.clients.google.com", "geminiweb-pa.clients6.google.com", "aistudio.google.com",
+                  "generativelanguage.googleapis.com", "cursor.com", "windsurf.com", "mistral.ai", "openrouter.ai",
+                  "elevenlabs.io", "deepwiki.com", "kimi.ai", "moonshot.ai", "minimax.io", "qoder.com",
+                  "coderabbit.gallery.vsassets.io"),
         "DIRECT": ("www.baidu.com", "www.taobao.com", "fe2cr.update.microsoft.com", "licdn.cn.cdn20.com",
                    "www.bilibili.com", "www.douyin.com", "www.icbc.com.cn", "store.steampowered.com",
-                   "www.epicgames.com", "soho-test.invalid"),
-        "REJECT": tuple(host for host in ("doubleclick.net", "googlesyndication.com")
+                   "www.epicgames.com", "soho-test.invalid", "moonshot.cn", "copilot.com",
+                   "copilot-stg.com", "copilot.cloud.microsoft", "copilot.microsoft.com"),
+        "REJECT": tuple(host for host in ("doubleclick.net", "googlesyndication.com", "browser-intake-datadoghq.com",
+                                         "o33249.ingest.sentry.io", "o33249.ingest.us.sentry.io", "openai.qualtrics.com")
                         if "ads" in filters and not in_set(ad_exemptions, host)),
     }
     for action, hosts in cases.items():
