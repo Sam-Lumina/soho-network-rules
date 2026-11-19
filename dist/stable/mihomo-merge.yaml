@@ -296,6 +296,14 @@ rule-providers:
     url: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/Qobuz.list
     proxy: PROXY
     interval: 86400
+  soho-telegram-ip:
+    type: http
+    behavior: classical
+    format: text
+    path: ./rule-providers/soho-public/telegram-ip.list
+    url: https://sam-lumina.github.io/soho-network-rules/data/community-v1/telegram-ip.list
+    proxy: PROXY
+    interval: 86400
   soho-core-ipv4:
     type: inline
     behavior: domain
@@ -365,6 +373,34 @@ rules:
 - DOMAIN-SUFFIX,linkedin.cn,DIRECT
 - OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube),(RULE-SET,soho-telegram),(RULE-SET,soho-twitter),(RULE-SET,soho-google),(RULE-SET,soho-linkedin),(RULE-SET,soho-whatsapp),(RULE-SET,soho-anthropic),(RULE-SET,soho-xai)),PROXY
 - OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube),(RULE-SET,soho-telegram),(RULE-SET,soho-twitter),(RULE-SET,soho-google),(RULE-SET,soho-linkedin),(RULE-SET,soho-whatsapp),(RULE-SET,soho-anthropic),(RULE-SET,soho-xai)),REJECT
+- RULE-SET,soho-telegram-ip,PROXY,no-resolve
+- RULE-SET,soho-telegram-ip,REJECT,no-resolve
+- IP-CIDR,91.105.192.0/23,PROXY,no-resolve
+- IP-CIDR,91.105.192.0/23,REJECT,no-resolve
+- IP-CIDR,91.108.4.0/22,PROXY,no-resolve
+- IP-CIDR,91.108.4.0/22,REJECT,no-resolve
+- IP-CIDR,91.108.8.0/21,PROXY,no-resolve
+- IP-CIDR,91.108.8.0/21,REJECT,no-resolve
+- IP-CIDR,91.108.16.0/21,PROXY,no-resolve
+- IP-CIDR,91.108.16.0/21,REJECT,no-resolve
+- IP-CIDR,91.108.56.0/22,PROXY,no-resolve
+- IP-CIDR,91.108.56.0/22,REJECT,no-resolve
+- IP-CIDR,95.161.64.0/20,PROXY,no-resolve
+- IP-CIDR,95.161.64.0/20,REJECT,no-resolve
+- IP-CIDR,149.154.160.0/20,PROXY,no-resolve
+- IP-CIDR,149.154.160.0/20,REJECT,no-resolve
+- IP-CIDR,185.76.151.0/24,PROXY,no-resolve
+- IP-CIDR,185.76.151.0/24,REJECT,no-resolve
+- IP-CIDR6,2001:67c:4e8::/48,PROXY,no-resolve
+- IP-CIDR6,2001:67c:4e8::/48,REJECT,no-resolve
+- IP-CIDR6,2001:b28:f23c::/47,PROXY,no-resolve
+- IP-CIDR6,2001:b28:f23c::/47,REJECT,no-resolve
+- IP-CIDR6,2001:b28:f23f::/48,PROXY,no-resolve
+- IP-CIDR6,2001:b28:f23f::/48,REJECT,no-resolve
+- IP-CIDR6,2a0a:f280::/32,PROXY,no-resolve
+- IP-CIDR6,2a0a:f280::/32,REJECT,no-resolve
+- IP-CIDR,194.221.250.50/32,PROXY,no-resolve
+- IP-CIDR,194.221.250.50/32,REJECT,no-resolve
 - RULE-SET,soho-adult,PROXY
 - RULE-SET,soho-adult,REJECT
 - RULE-SET,soho-microsoft,DIRECT

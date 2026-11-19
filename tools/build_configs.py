@@ -1,6 +1,7 @@
 """Render both public configurations from the reviewed policy."""
 
 import argparse
+from ipaddress import ip_network
 import json
 from pathlib import Path
 import re
@@ -19,6 +20,7 @@ COMMUNITY_ADULT = f"{COMMUNITY_DATA}/adult.list"
 COMMUNITY_GAMBLING = f"{COMMUNITY_DATA}/gambling.list"
 COMMUNITY_PROXY = f"{COMMUNITY_DATA}/services-proxy.list"
 COMMUNITY_DIRECT = f"{COMMUNITY_DATA}/services-direct.list"
+TELEGRAM_IPS = f"{COMMUNITY_DATA}/telegram-ip.list"
 ACL = "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset"
 PACKAGE = r"(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_"
 SIGNED_FAMILY = r"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\"
@@ -63,6 +65,17 @@ def text_provider(name, url):
     }
 
 
+def ip_rule(prefix):
+    network = ip_network(prefix)
+    kind = "IP-CIDR" if network.version == 4 else "IP-CIDR6"
+    return f"{kind},{network}"
+
+
+def telegram_ip_rules(policy, target, actions):
+    selectors = [f"RULE-SET,{target}", *(ip_rule(prefix) for prefix in policy["telegram_ips"]["fallback"])]
+    return [f"{selector},{action},no-resolve" for selector in selectors for action in actions]
+
+
 def windows(policy):
     providers = {}
     for row in policy["sets"]:
@@ -85,6 +98,7 @@ def windows(policy):
 
     community = community_providers(policy)
     providers.update((name, text_provider(name, url)) for name, url, _ in community)
+    providers["soho-telegram-ip"] = text_provider("soho-telegram-ip", f"{PAGES}/{TELEGRAM_IPS}")
     protected = {}
     for ipv4, key in ((True, "soho-core-ipv4"), (False, "soho-core-international")):
         rows = [row for row in policy["sets"] if row["policy"] == "proxy" and row["windows_ipv4_only"] == ipv4]
@@ -110,6 +124,7 @@ def windows(policy):
     ]
     rules += [domain_rule(host) + ",DIRECT" for host in policy["direct_exceptions"]]
     rules += [protected[False] + ",PROXY", protected[False] + ",REJECT"]
+    rules.extend(telegram_ip_rules(policy, "soho-telegram-ip", ("PROXY", "REJECT")))
     for row in policy["sets"]:
         if row["policy"] == "proxy_category":
             rules.extend(f"RULE-SET,{row['source']},{action}" for action in ("PROXY", "REJECT"))
@@ -157,6 +172,7 @@ def shadowrocket(policy):
     rules += [
         "RULE-SET," + data_url(policy, "meta-international.list") + ",PROXY",
     ]
+    rules.extend(telegram_ip_rules(policy, f"{PAGES}/{TELEGRAM_IPS}", ("PROXY",)))
     if any(row["policy"] == "proxy_category" for row in policy["sets"]):
         rules.append(f"RULE-SET,{PAGES}/{COMMUNITY_ADULT},PROXY")
     rules += [

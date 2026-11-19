@@ -62,7 +62,7 @@ jobs:
             python -B tools/build_community_data.py
             python -B tools/check_release.py
             changed=0
-            for name in media.list adult.list gambling.list services-proxy.list services-direct.list; do
+            for name in media.list adult.list gambling.list services-proxy.list services-direct.list telegram-ip.list; do
               curl --fail --silent --show-error --proto '=https' -H 'Cache-Control: no-cache' \
                 "$base/data/community-v1/$name" -o "$RUNNER_TEMP/$name"
               cmp --silent "$RUNNER_TEMP/$name" "dist/data/community-v1/$name" || changed=1

@@ -318,5 +318,17 @@
         "rules": 42
       }
     ]
+  },
+  "telegram-ip.list": {
+    "sha256": "8488e8872cd5609e528119be300a84d0e7e44dafffea24c0cefa5beab1519c11",
+    "bytes": 425,
+    "count": 12,
+    "sources": [
+      {
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/39ef714731b5523b471d6868f8e3e6e83d915611/geo/geoip/telegram.list",
+        "sha256": "b0a0a5a4280f2c713a26bf1763317be5aefeda02e4e78dab7c2efbda02663181",
+        "rules": 12
+      }
+    ]
   }
 }

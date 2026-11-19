@@ -4,6 +4,7 @@ import argparse
 import base64
 import binascii
 from hashlib import sha256
+from ipaddress import ip_address, ip_network
 import json
 from pathlib import Path
 import re
@@ -14,7 +15,7 @@ import yaml
 
 from build_configs import (
     ACL, HAGEZI, META, PAGES, COMMUNITY_DATA, COMMUNITY_MEDIA, COMMUNITY_ADULT, COMMUNITY_GAMBLING,
-    COMMUNITY_DIRECT, COMMUNITY_PROXY, community_providers,
+    COMMUNITY_DIRECT, COMMUNITY_PROXY, TELEGRAM_IPS, community_providers, ip_rule, telegram_ip_rules,
 )
 
 
@@ -31,7 +32,7 @@ ASSETS = {
 }
 CONFIGS = {"dist/stable/mihomo-merge.yaml", "dist/stable/shadowrocket.conf"}
 COMMUNITY_LISTS = (COMMUNITY_MEDIA, COMMUNITY_ADULT, COMMUNITY_GAMBLING, COMMUNITY_PROXY, COMMUNITY_DIRECT)
-COMMUNITY_FILES = {f"dist/{path}" for path in (*COMMUNITY_LISTS, f"{COMMUNITY_DATA}/SOURCE.md",
+COMMUNITY_FILES = {f"dist/{path}" for path in (*COMMUNITY_LISTS, TELEGRAM_IPS, f"{COMMUNITY_DATA}/SOURCE.md",
                                                f"{COMMUNITY_DATA}/SHA256.json")}
 HULU_JAPAN = "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/Ruleset/HuluJapan.list"
 POLYFORM_SHA256 = "ffcca38841adb694b6f380647e15f17c446a4d1656fed51a1e2041d064c94cc8"
@@ -43,7 +44,7 @@ MIT_NOTICE_SHA256 = {
 HOSTS = {
     "github.com", "api.github.com", "raw.githubusercontent.com", "sam-lumina.github.io", "polyformproject.org",
     "www.gnu.org", "gnu.org", "fsf.org", "www.fsf.org", "www.clashverge.dev", "apps.apple.com",
-    "wiki.metacubex.one", "docs.github.com", "example.com",
+    "wiki.metacubex.one", "docs.github.com", "example.com", "core.telegram.org",
 }
 SENSITIVE_FIELDS = r"password|passwd|token|client[_-]?secret|secret|authorization|api[_-]?key|private[_-]?key|uuid|cookie|short[_-]?id"
 SENSITIVE_PARAM = re.compile(rf"(?:^|[_-])(?:key|auth|{SENSITIVE_FIELDS})(?:$|[_-])", re.I)
@@ -139,6 +140,26 @@ def shadowrocket_check(files, directory, policy):
         require(all(len(row) == 2 and row[0] in {"DOMAIN", "DOMAIN-SUFFIX"} and valid_domain(row[1])
                     for row in table[f"{PAGES}/{directory.removeprefix('dist/')}/{leaf}"]), "Malformed Shadowrocket external rules")
     manifest = json.loads(files[f"dist/{COMMUNITY_DATA}/SHA256.json"])
+    telegram_url = f"{PAGES}/{TELEGRAM_IPS}"
+    telegram = files[f"dist/{TELEGRAM_IPS}"]
+    telegram_entry = manifest["telegram-ip.list"]
+    telegram_sources = telegram_entry["sources"]
+    require(sha256(telegram).hexdigest() == telegram_entry["sha256"]
+            and len(telegram) == telegram_entry["bytes"] and len(telegram_sources) == 1
+            and re.fullmatch(re.escape(META) + r"/[a-f0-9]{40}/geo/geoip/telegram\.list", telegram_sources[0]["url"])
+            and re.fullmatch(r"[a-f0-9]{64}", telegram_sources[0]["sha256"]),
+            "Telegram IP data checksum or provenance mismatch")
+    telegram_networks = set()
+    for line in telegram.decode().splitlines():
+        kind, prefix, option = line.split(",")
+        network = ip_network(prefix)
+        require(option == "no-resolve" and f"{kind},{prefix}" == ip_rule(prefix)
+                and network.is_global and network.prefixlen >= (16 if network.version == 4 else 32),
+                "Unexpected Telegram IP rule")
+        telegram_networks.add(network)
+    require(len(telegram_networks) == telegram_entry["count"] > 0
+            and {network.version for network in telegram_networks} == {4, 6},
+            "Incomplete Telegram IPv4/IPv6 package")
     for name in COMMUNITY_LISTS:
         community = files[f"dist/{name}"]
         entry = manifest[name.rsplit("/", 1)[1]]
@@ -178,7 +199,12 @@ def shadowrocket_check(files, directory, policy):
     upstream.update(url for _, url, _ in community if url.startswith(ACL + "/"))
     require(config[-len(community)-1:-1] == [["RULE-SET", url, outcome] for _, url, outcome in community],
             "Community routes must follow the existing rule precedence")
+    telegram_rules = [line.split(",") for line in telegram_ip_rules(policy, telegram_url, ("PROXY",))]
+    start = config.index(telegram_rules[0])
+    require(config[start:start+len(telegram_rules)] == telegram_rules, "Telegram IP rules incomplete or out of order")
     for row in config[1:-1]:
+        if row in telegram_rules:
+            continue
         require(len(row) == 3 and row[-1] in {"DIRECT", "PROXY", "REJECT"}, "Malformed Shadowrocket rule")
         kind, item, outcome = row
         if kind == "DOMAIN-SET":
@@ -198,12 +224,22 @@ def shadowrocket_check(files, directory, policy):
         return ("DOMAIN", host) in entries or any(
             ("DOMAIN-SUFFIX", ".".join(labels[index:])) in entries for index in range(len(labels)))
 
-    def route(host):
+    def route(host, telegram_provider=True):
         # External DOMAIN-SET loading is validated on-device. Check first-match order for local data.
+        try:
+            address = ip_address(host)
+        except ValueError:
+            address = None
         for rule in config[1:]:
             if rule[0] == "FINAL":
                 return rule[1]
-            kind, target, action = rule
+            kind, target, action = rule[:3]
+            if address is not None:
+                if kind == "RULE-SET" and target == telegram_url and telegram_provider:
+                    if any(address in network for network in telegram_networks):
+                        return action
+                elif kind in {"IP-CIDR", "IP-CIDR6"} and address in ip_network(target):
+                    return action
             if kind == "RULE-SET" and target in table and in_set(table[target], host):
                 return action
             if kind in {"DOMAIN", "DOMAIN-SUFFIX"} and matches(kind, target, host):
@@ -227,6 +263,12 @@ def shadowrocket_check(files, directory, policy):
     }
     for action, hosts in cases.items():
         require(all(route(host) == action for host in hosts), f"Shadowrocket sample mismatch for {action}")
+    telegram_samples = ("149.154.167.41", "149.154.175.50", "95.161.76.101", "194.221.250.50", "2001:b28:f23d:f001::a")
+    for provider_available in (True, False):
+        require(all(route(host, provider_available) == "PROXY" for host in telegram_samples)
+                and route("192.0.2.1", provider_available) == "DIRECT"
+                and route("2001:db8::1", provider_available) == "DIRECT",
+                "Telegram IP routing or cache-missing fallback failed")
     adult = table[f"{PAGES}/{COMMUNITY_ADULT}"]
     gambling = table[f"{PAGES}/{COMMUNITY_GAMBLING}"]
     require(all(kind == "DOMAIN-SUFFIX" and "." in host for kind, host in gambling),
@@ -281,8 +323,9 @@ def check(files):
     providers = list(merge["rule-providers"].values())
     online = [provider for provider in providers if provider["type"] == "http"]
     community = community_providers(policy)
-    expected_online = len(policy["sets"]) + len(community)
-    approved_text = {HULU_JAPAN, f"{PAGES}/{COMMUNITY_GAMBLING}", *(url for _, url, _ in community)}
+    expected_online = len(policy["sets"]) + len(community) + 1
+    approved_text = {HULU_JAPAN, f"{PAGES}/{COMMUNITY_GAMBLING}", f"{PAGES}/{TELEGRAM_IPS}",
+                     *(url for _, url, _ in community)}
     require(len(providers) == expected_online + 2 and len(online) == expected_online and
             all(row["url"].startswith("https://") and
                 (row["format"] == "mrs" or (row["url"] in approved_text and row["behavior"] == "classical"
@@ -295,6 +338,11 @@ def check(files):
     rules = merge["rules"]
     require(rules[-1] == "MATCH,DIRECT" and sum(row.startswith("MATCH,") for row in rules) == 1, "Unexpected final rule")
     require(rules[2] == "RULE-SET,soho-gambling,REJECT", "Gambling must reject before all proxy routes")
+    telegram_rules = telegram_ip_rules(policy, "soho-telegram-ip", ("PROXY", "REJECT"))
+    start = rules.index(telegram_rules[0])
+    require(rules[start:start+len(telegram_rules)] == telegram_rules
+            and start + len(telegram_rules) <= rules.index("RULE-SET,soho-cn,DIRECT"),
+            "Telegram IP rules must proxy or reject before general direct routes")
     adult = rules.index("RULE-SET,soho-adult,PROXY")
     require(rules[adult + 1] == "RULE-SET,soho-adult,REJECT"
             and adult < rules.index("RULE-SET,soho-cn,DIRECT"),

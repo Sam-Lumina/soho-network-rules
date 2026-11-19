@@ -11,7 +11,7 @@ from urllib.request import Request, urlopen
 
 from build_configs import (
     ROOT, POLICY, META, HAGEZI, COMMUNITY_DATA, COMMUNITY_ADULT, COMMUNITY_GAMBLING,
-    COMMUNITY_PROXY, COMMUNITY_DIRECT,
+    COMMUNITY_PROXY, COMMUNITY_DIRECT, TELEGRAM_IPS, ip_rule,
 )
 from build_rule_data import download, domain_rules
 
@@ -35,6 +35,10 @@ def fetch_rules(url):
         if not all(line.startswith("*.") and "." in line[2:] for line in lines):
             raise ValueError("Unexpected HaGeZi wildcard syntax")
         rules = set(domain_rules("\n".join("+." + line[2:] for line in lines).encode()))
+    elif "/geo/geoip/" in url:
+        blob = download(url)
+        rules = {ip_rule(line) + ",no-resolve" for line in blob.decode("utf-8-sig").splitlines()
+                 if line and not line.startswith("#")}
     else:
         blob = download(url)
         rules = set(domain_rules(blob))
@@ -73,6 +77,7 @@ def build():
                                             for name in policy["community"]["proxy_meta"]],
         COMMUNITY_DIRECT.rsplit("/", 1)[1]: [f"{META}/{meta}/geo/geosite/{name}.list"
                                              for name in policy["community"]["direct_meta"]],
+        TELEGRAM_IPS.rsplit("/", 1)[1]: [f"{META}/{meta}/{policy['telegram_ips']['meta_path']}"],
     }
     metadata = {}
     parent.mkdir(parents=True, exist_ok=True)
