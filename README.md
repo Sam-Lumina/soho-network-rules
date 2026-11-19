@@ -39,7 +39,7 @@ Windows 直接跟随 MetaCubeX 的国外 AI 和 Meta 分类更新，现有国内
 
 修改后运行 `python -B tools/build_configs.py`，两端配置在 `dist/stable/`。Windows 把新 YAML 绑定到独立订阅的扩展配置，iPhone 导入新的 CONF 到独立配置。个人白名单应留在本地或私有分支。发布公共配置仍由维护者审核后手动执行。
 
-带白名单的配置已在 Mihomo 隔离实例验证。Shadowrocket 的白名单复合规则还需要用独立配置实机核对，Stable 默认使用空白名单。
+白名单已在 Mihomo 隔离实例验证。Shadowrocket 广告白名单已在 iPhone 12 上用独立配置实测，例外域名恢复原有代理出口，另一广告域名仍被拦截。Stable 默认使用空白名单。
 
 网站被拦时，Windows 在 Clash Verge「连接」或「日志」中查目标和命中规则，查看最终策略及代理链。iPhone 在 Shadowrocket「配置 → 测试规则」输入域名，再到「数据 → 代理」查看实际访问记录。先确认客户端已加载当前规则集。匹配到广告或威胁规则时改各自的白名单，分类或出口不对时查看对应业务规则。远程规则会更新，实际命中以客户端记录为准。
 
