@@ -361,10 +361,8 @@ rules:
 - RULE-SET,soho-threat,REJECT
 - RULE-SET,soho-ads,REJECT
 - RULE-SET,soho-gambling,REJECT
-- AND,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\ChatGPT\.exe$),(OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
 - AND,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\resources\\codex\.exe$),(OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
-- PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[^\\]+\\,REJECT
-- PROCESS-NAME,ChatGPT.exe,REJECT
+- AND,((OR,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[^\\]+\\),(PROCESS-NAME,ChatGPT.exe))),(NOT,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\ChatGPT\.exe$)))),REJECT
 - PROCESS-NAME,codex.exe,REJECT
 - AND,((OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
 - OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github)),REJECT

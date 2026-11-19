@@ -108,16 +108,18 @@ def windows(policy):
         providers[key] = {"type": "inline", "behavior": "domain", "payload": list(dict.fromkeys(hosts))}
         protected[ipv4] = logic("OR", "RULE-SET," + key, *("RULE-SET," + row["source"] for row in rows))
 
-    # Public P2.9 retains the P2.8 rule order and exact Windows package allowlist.
     if policy["ad_exceptions"]:
         raise ValueError("Review an exact ad exception on both clients before enabling it.")
     rules = [f"RULE-SET,{row['source']},REJECT" for row in policy["sets"] if row["policy"] == "reject"]
     ipv4 = "IP-CIDR,0.0.0.0/0"
-    for process in (r"ChatGPT\.exe$", r"resources\\codex\.exe$"):
-        rules.append(logic("AND", "PROCESS-PATH-REGEX," + PACKAGE + SIGNED_FAMILY + process, protected[True], ipv4) + ",PROXY")
+    desktop = "PROCESS-PATH-REGEX," + PACKAGE + SIGNED_FAMILY + r"ChatGPT\.exe$"
+    cli = "PROCESS-PATH-REGEX," + PACKAGE + SIGNED_FAMILY + r"resources\\codex\.exe$"
+    package = "PROCESS-PATH-REGEX," + PACKAGE + r"[^\\]+\\"
+    # The embedded browser shares ChatGPT.exe, so let that exact executable fall through to business routing.
+    guarded = logic("OR", package, "PROCESS-NAME,ChatGPT.exe")
     rules += [
-        "PROCESS-PATH-REGEX," + PACKAGE + r"[^\\]+\\,REJECT",
-        "PROCESS-NAME,ChatGPT.exe,REJECT",
+        logic("AND", cli, protected[True], ipv4) + ",PROXY",
+        logic("AND", guarded, logic("NOT", desktop)) + ",REJECT",
         "PROCESS-NAME,codex.exe,REJECT",
         logic("AND", protected[True], ipv4) + ",PROXY",
         protected[True] + ",REJECT",

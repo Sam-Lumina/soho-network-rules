@@ -17,6 +17,8 @@ SOHO Network Rules 为 Clash Verge Rev / Mihomo 和 Shadowrocket 提供一套通
 
 Windows 已在 Clash Verge Rev 2.5.10 / Mihomo 1.19.33 上实机验证 Rule + TUN 和 Global + TUN，系统代理关闭。节点订阅按客户端设置更新，远程规则集每 24 小时检查。Merge 有新版时，可从同一地址下载并替换订阅扩展。联网异常时可选回原订阅。
 
+官方 Windows 安装包中的 Codex 桌面程序与其内置浏览器共用 `ChatGPT.exe`，两者按常用浏览器一样的业务规则分流。Codex 命令行、包内其他进程和非官方路径下的同名程序仍受进程保护。
+
 已配置本机定时同步的设备可以定期检查 Merge。定时检查已运行，新版自动替换并生效仍待实测。本机同步需单独配置，公开安装流程使用 Clash Verge 的订阅扩展。
 
 ## Shadowrocket 快速安装
