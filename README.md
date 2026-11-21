@@ -31,7 +31,10 @@ Shadowrocket 2.2.93 和 2.2.76 均已实机导入、选用和手动更新。两�
 
 两端的国际 AI 补充规则使用 MetaCubeX 的 `category-ai-!cn` 分类，Shadowrocket 通过定期生成的扩展业务清单获取 Cursor、Windsurf、Mistral、OpenRouter 等域名。Gemini 网页、聊天接口和 AI Studio 的关键域名也写入主配置。两端优先代理 `kimi.ai`、`moonshot.ai`、`minimax.io`、`qoder.com` 和 CodeRabbit 的 VS Code 扩展域名，微软 Copilot 的四个入口直连，广告过滤仍优先于 AI 分类。Shadowrocket 直接订阅社区维护的 Facebook 和 Instagram 域名清单。两端在配置中保留 Muse 登录链路的已验证主机。
 
+Cloudflare 的域名分类在两端走代理，包括控制台、API、验证服务、Workers、Pages、R2 和 Tunnel。已核对的域名内嵌在主配置，扩展业务清单也会定期跟随社区更新。路由以域名匹配，广告和威胁拦截规则仍优先。 [分类来源](https://github.com/v2fly/domain-list-community/blob/master/data/cloudflare)
+
 ## 过滤开关与误杀排查
+
 
 在 [共同策略](rules/policy.json) 中修改 `modules.ads.enabled` 来开关广告过滤，修改 `modules.threat.enabled` 来开关威胁防护。两个开关默认开启，关闭后该过滤器的拦截规则会从生成配置中移除。博彩过滤独立运行。
 

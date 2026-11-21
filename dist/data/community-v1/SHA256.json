@@ -56,9 +56,9 @@
     ]
   },
   "services-proxy.list": {
-    "sha256": "09c5c6752c9685d036be392dfae2b94a85fb476516790cda3760f18b413097b4",
-    "bytes": 24821,
-    "count": 831,
+    "sha256": "01ff1e7c934f21ced4a0b03a92d8df6a501516cb3ce521a699d22aedc00f4308",
+    "bytes": 27222,
+    "count": 907,
     "sources": [
       {
         "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/39ef714731b5523b471d6868f8e3e6e83d915611/geo/geosite/abema.list",
@@ -214,6 +214,11 @@
         "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/21a0aeef70681851c15d4741381dda538c9e8700/geo/geosite/category-ai-!cn.list",
         "sha256": "8b1628e0f6eb5e2327ccd5723acd4c3267b1ab9b9b4fc5ee4ae5691c86ee5d18",
         "rules": 218
+      },
+      {
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/f7119625e8e225d0e5a06b137465e0c10cb906f8/geo/geosite/cloudflare.list",
+        "sha256": "f0b3b2c6dcbcd3f6e52fb8c3fc955dfe189cada562567f019b1e1d5d35b76aba",
+        "rules": 76
       }
     ]
   },
