@@ -394,7 +394,7 @@ def check(files):
         if row["url"].startswith(PAGES + "/"):
             require("dist/" + row["url"].removeprefix(PAGES + "/") in files, "Missing Pages rule artifact")
     rules = merge["rules"]
-    require(rules[-1] == "MATCH,DIRECT" and sum(row.startswith("MATCH,") for row in rules) == 1, "Unexpected final rule")
+    require(rules[-1] == "MATCH," + policy["windows_fallback"] and sum(row.startswith("MATCH,") for row in rules) == 1, "Unexpected final rule")
     prefix = [filter_rule(f"RULE-SET,{FILTERS[module]}", exceptions) for module, exceptions in filters.items()]
     require(rules[:1+len(prefix)] == [*prefix, "RULE-SET,soho-gambling,REJECT"],
             "Mihomo filters and gambling must precede business routing")

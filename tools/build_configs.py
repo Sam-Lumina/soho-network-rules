@@ -158,7 +158,6 @@ def windows(policy):
     rules += [
         logic("AND", cli, protected[True], ipv4) + ",PROXY",
         logic("AND", guarded, logic("NOT", desktop)) + ",REJECT",
-        "PROCESS-NAME,codex.exe,REJECT",
         logic("AND", protected[True], ipv4) + ",PROXY",
         protected[True] + ",REJECT",
     ]
@@ -170,8 +169,8 @@ def windows(policy):
             rules.extend(f"RULE-SET,{row['source']},{action}" for action in ("PROXY", "REJECT"))
     for row in policy["sets"]:
         if row["policy"] == "direct":
-            suffix = ",no-resolve" if row["kind"] == "ipcidr" else ""
-            rules.append("RULE-SET," + row["source"] + ",DIRECT" + suffix)
+            # Resolve unmatched hosts so servers inside China stay direct before the proxy fallback.
+            rules.append("RULE-SET," + row["source"] + ",DIRECT")
     for row in policy["sets"]:
         if row["policy"] == "proxy_supplement":
             rules.append("RULE-SET," + row["source"] + ",PROXY")
@@ -180,7 +179,7 @@ def windows(policy):
         rules.append(f"RULE-SET,{name},{outcome}")
         if outcome == "PROXY":
             rules.append(f"RULE-SET,{name},REJECT")
-    rules.append("MATCH," + policy["fallback"])
+    rules.append("MATCH," + policy["windows_fallback"])
     return {
         "find-process-mode": "strict",
         "proxy-groups": [

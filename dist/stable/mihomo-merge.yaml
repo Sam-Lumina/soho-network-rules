@@ -450,7 +450,6 @@ rules:
 - RULE-SET,soho-gambling,REJECT
 - AND,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\resources\\codex\.exe$),(OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
 - AND,((OR,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[^\\]+\\),(PROCESS-NAME,ChatGPT.exe))),(NOT,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\ChatGPT\.exe$)))),REJECT
-- PROCESS-NAME,codex.exe,REJECT
 - AND,((OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
 - OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github)),REJECT
 - DOMAIN,licdn.cn.cdn20.com,DIRECT
@@ -494,7 +493,7 @@ rules:
 - RULE-SET,soho-adult,REJECT
 - RULE-SET,soho-microsoft,DIRECT
 - RULE-SET,soho-cn,DIRECT
-- RULE-SET,soho-geoip-cn,DIRECT,no-resolve
+- RULE-SET,soho-geoip-cn,DIRECT
 - RULE-SET,soho-community-ai,PROXY
 - RULE-SET,soho-community-ai,REJECT
 - RULE-SET,soho-meta,PROXY
@@ -524,4 +523,4 @@ rules:
 - RULE-SET,soho-acl-pandora,REJECT
 - RULE-SET,soho-acl-qobuz,PROXY
 - RULE-SET,soho-acl-qobuz,REJECT
-- MATCH,DIRECT
+- MATCH,PROXY

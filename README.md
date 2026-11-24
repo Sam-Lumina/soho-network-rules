@@ -1,6 +1,6 @@
 # SOHO Network Rules
 
-SOHO Network Rules 为 Clash Verge Rev / Mihomo 和 Shadowrocket 提供一套通用分流规则。国内、Microsoft 和普通未知流量默认直连，指定国际业务与成人分类走代理，广告、博彩和已知威胁域名被拦截。节点和订阅由你在客户端单独管理，本项目只提供规则与配置。
+SOHO Network Rules 为 Clash Verge Rev / Mihomo 和 Shadowrocket 提供一套通用分流规则。国内、Microsoft 直连。Windows 上其余未识别的流量走代理，iPhone 上未知流量仍默认直连。指定国际业务与成人分类走代理，广告、博彩和已知威胁域名被拦截。节点和订阅由你在客户端单独管理，本项目只提供规则与配置。
 
 ## Stable 下载
 
@@ -17,7 +17,7 @@ SOHO Network Rules 为 Clash Verge Rev / Mihomo 和 Shadowrocket 提供一套通
 
 Windows 已在 Clash Verge Rev 2.5.10 / Mihomo 1.19.33 上实机验证 Rule + TUN 和 Global + TUN，系统代理关闭。节点订阅按客户端设置更新，远程规则集每 24 小时检查。Merge 有新版时，可从同一地址下载并替换订阅扩展。联网异常时可选回原订阅。
 
-普通浏览器和 AI 软件、其他软件的内置浏览器都按访问目标使用同一套业务规则。已识别的 Windows x64 Codex 桌面程序与内置浏览器共用 `ChatGPT.exe`，两者都遵循这个规则。Codex 命令行、包内其他进程和非官方路径下的同名程序仍受进程保护。
+普通浏览器和 AI 软件、其他软件的内置浏览器都按访问目标使用同一套业务规则。已识别的 Windows x64 Codex 桌面程序与内置浏览器共用 `ChatGPT.exe`，两者都遵循这个规则。Codex 桌面包内的其他进程仍受进程保护。其他方式安装的 Codex 命令行按访问目标使用同一套规则。
 
 已配置本机定时同步的 Windows 设备会自动更新 Merge，日常更新已由用户确认。其他设备可手动替换订阅扩展。Windows Update 和 Microsoft Store 在规则模式下默认直连，Store 个别下载遇到网络问题可临时切全局，完成后切回规则模式。
 
@@ -48,7 +48,7 @@ Cloudflare 的域名分类在两端走代理，包括控制台、API、验证服
 
 ## 已知限制
 
-已列入静态保护的关键域名在规则集缺失时仍匹配代理策略。初次下载失败时，只有动态规则覆盖的目标可能落入直连兜底。先确认规则集加载再使用。域名过滤只能拦截部分广告。DNS、IPv6 和 UDP 的实际表现取决于客户端、系统与节点。
+已列入静态保护的关键域名在规则集缺失时仍匹配代理策略。初次下载失败时，只有动态规则覆盖的目标可能落入兜底规则（Windows 走代理，iPhone 直连）。先确认规则集加载再使用。域名过滤只能拦截部分广告。DNS、IPv6 和 UDP 的实际表现取决于客户端、系统与节点。
 
 Windows 验收中，国内外 DNS 样本均由 TUN 接管，直连和代理的 UDP 样本均有应答。部分强制 HTTP/3 样本未完成握手，普通 HTTPS 经 TCP 实测可用。验收网络未提供可用的公网 IPv6，双栈下的防绕过仍待验证。
 
@@ -60,7 +60,7 @@ Netflix、Hulu、Spotify、Twitch 和 Formula 1 使用排名靠前的 MetaCubeX 
 
 成人类使用 MetaCubeX 的分类，博彩使用 HaGeZi 完整名单。两类名单交叉时先拦截。Windows 直接使用 MetaCubeX 成人分类，Shadowrocket 使用定时转换的同源清单。两个客户端共用转换后的博彩名单。分类过滤在客户端的规则模式生效。
 
-两端共用扩展业务名单。Disney+、Prime Video、Apple TV+、HBO、Discord、TikTok、Perplexity、Hugging Face 等来自 MetaCubeX，走代理。国内银行、证券、教育、物流、网盘、社交，以及 Steam、Epic、任天堂等常规游戏服务走直连。ACL4SSR 补充 All4、ITV、My5、Pandora、Qobuz，走代理。精确分类见 [共同策略](rules/policy.json)，构建后的 MetaCubeX 名单每天检查上游并自动更新。普通未指定用途的类别继续按现有规则匹配，最后由直连兜底。
+两端共用扩展业务名单。Disney+、Prime Video、Apple TV+、HBO、Discord、TikTok、Perplexity、Hugging Face 等来自 MetaCubeX，走代理。国内银行、证券、教育、物流、网盘、社交，以及 Steam、Epic、任天堂等常规游戏服务走直连。ACL4SSR 补充 All4、ITV、My5、Pandora、Qobuz，走代理。精确分类见 [共同策略](rules/policy.json)，构建后的 MetaCubeX 名单每天检查上游并自动更新。普通未指定用途的类别继续按现有规则匹配，最后由兜底规则处理（Windows 走代理，iPhone 直连）。
 
 ## 许可与反馈
 
