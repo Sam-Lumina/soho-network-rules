@@ -17,6 +17,10 @@ proxy-groups:
   proxies:
   - PROXY
   empty-fallback: REJECT
+- name: 外贸
+  type: select
+  proxies:
+  - PROXY
 rule-providers:
   soho-threat:
     type: http
@@ -308,13 +312,17 @@ rule-providers:
     type: inline
     behavior: domain
     payload:
+    - +.github.com
+    - +.githubusercontent.com
+    - +.githubassets.com
+  soho-waimao-ipv4:
+    type: inline
+    behavior: domain
+    payload:
     - chatgpt.com
     - +.openai.com
     - +.oaistatic.com
     - +.oaiusercontent.com
-    - +.github.com
-    - +.githubusercontent.com
-    - +.githubassets.com
   soho-core-international:
     type: inline
     behavior: domain
@@ -332,32 +340,6 @@ rule-providers:
     - twitter.com
     - api.x.com
     - api.twitter.com
-    - google.com
-    - www.google.com
-    - mail.google.com
-    - accounts.google.com
-    - gemini.google
-    - gemini.google.com
-    - geminiweb-pa.clients.google.com
-    - geminiweb-pa.clients6.google.com
-    - aistudio.google.com
-    - generativelanguage.googleapis.com
-    - +.gmail.com
-    - linkedin.com
-    - www.linkedin.com
-    - api.linkedin.com
-    - whatsapp.com
-    - www.whatsapp.com
-    - web.whatsapp.com
-    - api.whatsapp.com
-    - claude.ai
-    - www.claude.ai
-    - console.anthropic.com
-    - api.anthropic.com
-    - grok.com
-    - www.grok.com
-    - grok.x.com
-    - api.x.ai
     - muse.ai
     - auth.muse.ai
     - www.facebook.com
@@ -444,14 +426,49 @@ rule-providers:
     - +.videodelivery.net
     - +.warp.plus
     - +.workers.dev
+  soho-waimao-international:
+    type: inline
+    behavior: domain
+    payload:
+    - google.com
+    - www.google.com
+    - mail.google.com
+    - accounts.google.com
+    - gemini.google
+    - gemini.google.com
+    - geminiweb-pa.clients.google.com
+    - geminiweb-pa.clients6.google.com
+    - aistudio.google.com
+    - generativelanguage.googleapis.com
+    - +.gmail.com
+    - linkedin.com
+    - www.linkedin.com
+    - api.linkedin.com
+    - whatsapp.com
+    - www.whatsapp.com
+    - web.whatsapp.com
+    - api.whatsapp.com
+    - claude.ai
+    - www.claude.ai
+    - console.anthropic.com
+    - api.anthropic.com
+    - grok.com
+    - www.grok.com
+    - grok.x.com
+    - api.x.ai
+    - +.perplexity.ai
+    - +.perplexity.com
+    - +.pplx.ai
 rules:
 - RULE-SET,soho-threat,REJECT
 - RULE-SET,soho-ads,REJECT
 - RULE-SET,soho-gambling,REJECT
-- AND,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\resources\\codex\.exe$),(OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
+- AND,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\resources\\codex\.exe$),(OR,((RULE-SET,soho-waimao-ipv4),(RULE-SET,soho-openai))),(IP-CIDR,0.0.0.0/0)),外贸
+- AND,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\resources\\codex\.exe$),(OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
 - AND,((OR,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[^\\]+\\),(PROCESS-NAME,ChatGPT.exe))),(NOT,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\ChatGPT\.exe$)))),REJECT
-- AND,((OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
-- OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-openai),(RULE-SET,soho-github)),REJECT
+- AND,((OR,((RULE-SET,soho-waimao-ipv4),(RULE-SET,soho-openai))),(IP-CIDR,0.0.0.0/0)),外贸
+- AND,((OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
+- OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-github),(RULE-SET,soho-waimao-ipv4),(RULE-SET,soho-openai)),REJECT
 - DOMAIN,licdn.cn.cdn20.com,DIRECT
 - DOMAIN-SUFFIX,licdn.cn,DIRECT
 - DOMAIN-SUFFIX,linkedin.cn,DIRECT
@@ -459,8 +476,12 @@ rules:
 - DOMAIN-SUFFIX,copilot.com,DIRECT
 - DOMAIN-SUFFIX,copilot.cloud.microsoft,DIRECT
 - DOMAIN-SUFFIX,copilot-stg.com,DIRECT
-- OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube),(RULE-SET,soho-telegram),(RULE-SET,soho-twitter),(RULE-SET,soho-google),(RULE-SET,soho-linkedin),(RULE-SET,soho-whatsapp),(RULE-SET,soho-anthropic),(RULE-SET,soho-xai)),PROXY
-- OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube),(RULE-SET,soho-telegram),(RULE-SET,soho-twitter),(RULE-SET,soho-google),(RULE-SET,soho-linkedin),(RULE-SET,soho-whatsapp),(RULE-SET,soho-anthropic),(RULE-SET,soho-xai)),REJECT
+- RULE-SET,soho-waimao-international,外贸
+- RULE-SET,soho-waimao-international,REJECT
+- OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube),(RULE-SET,soho-telegram),(RULE-SET,soho-twitter)),PROXY
+- OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube),(RULE-SET,soho-telegram),(RULE-SET,soho-twitter)),REJECT
+- OR,((RULE-SET,soho-google),(RULE-SET,soho-linkedin),(RULE-SET,soho-whatsapp),(RULE-SET,soho-anthropic),(RULE-SET,soho-xai)),外贸
+- OR,((RULE-SET,soho-google),(RULE-SET,soho-linkedin),(RULE-SET,soho-whatsapp),(RULE-SET,soho-anthropic),(RULE-SET,soho-xai)),REJECT
 - RULE-SET,soho-telegram-ip,PROXY,no-resolve
 - RULE-SET,soho-telegram-ip,REJECT,no-resolve
 - IP-CIDR,91.105.192.0/23,PROXY,no-resolve
@@ -493,9 +514,9 @@ rules:
 - RULE-SET,soho-adult,REJECT
 - RULE-SET,soho-microsoft,DIRECT
 - RULE-SET,soho-cn,DIRECT
-- RULE-SET,soho-geoip-cn,DIRECT
-- RULE-SET,soho-community-ai,PROXY
+- RULE-SET,soho-community-ai,外贸
 - RULE-SET,soho-community-ai,REJECT
+- RULE-SET,soho-geoip-cn,DIRECT
 - RULE-SET,soho-meta,PROXY
 - RULE-SET,soho-meta,REJECT
 - RULE-SET,soho-netflix,PROXY

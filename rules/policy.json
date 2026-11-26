@@ -31,6 +31,7 @@
     {
       "source": "soho-openai",
       "policy": "proxy",
+      "waimao": true,
       "kind": "domain",
       "domains": [
         "chatgpt.com",
@@ -96,6 +97,7 @@
     {
       "source": "soho-google",
       "policy": "proxy",
+      "waimao": true,
       "kind": "domain",
       "domains": [
         "google.com",
@@ -116,6 +118,7 @@
     {
       "source": "soho-linkedin",
       "policy": "proxy",
+      "waimao": true,
       "kind": "domain",
       "domains": [
         "linkedin.com",
@@ -128,6 +131,7 @@
     {
       "source": "soho-whatsapp",
       "policy": "proxy",
+      "waimao": true,
       "kind": "domain",
       "domains": [
         "whatsapp.com",
@@ -141,6 +145,7 @@
     {
       "source": "soho-anthropic",
       "policy": "proxy",
+      "waimao": true,
       "kind": "domain",
       "domains": [
         "claude.ai",
@@ -154,6 +159,7 @@
     {
       "source": "soho-xai",
       "policy": "proxy",
+      "waimao": true,
       "kind": "domain",
       "domains": [
         "grok.com",
@@ -190,7 +196,7 @@
     },
     {
       "source": "soho-community-ai",
-      "policy": "proxy_supplement",
+      "policy": "waimao_supplement",
       "kind": "domain",
       "domains": [],
       "windows_ipv4_only": false,
@@ -383,6 +389,10 @@
   },
   "ad_exceptions": [],
   "threat_exceptions": [],
+  "waimao": {
+    "group": "外贸",
+    "domains": ["+.perplexity.ai", "+.perplexity.com", "+.pplx.ai"]
+  },
   "fallback": "DIRECT",
   "windows_fallback": "PROXY",
   "data_version": "p2.9",

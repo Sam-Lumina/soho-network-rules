@@ -137,14 +137,24 @@ def windows(policy):
     community = community_providers(policy)
     providers.update((name, text_provider(name, url)) for name, url, _ in community)
     providers["soho-telegram-ip"] = text_provider("soho-telegram-ip", f"{PAGES}/{TELEGRAM_IPS}")
-    protected = {}
-    for ipv4, key in ((True, "soho-core-ipv4"), (False, "soho-core-international")):
-        rows = [row for row in policy["sets"] if row["policy"] == "proxy" and row["windows_ipv4_only"] == ipv4]
-        hosts = [value for row in rows for value in row["domains"]]
-        if not ipv4:
-            hosts.extend(policy["proxy_exceptions"])
-        providers[key] = {"type": "inline", "behavior": "domain", "payload": list(dict.fromkeys(hosts))}
-        protected[ipv4] = logic("OR", "RULE-SET," + key, *("RULE-SET," + row["source"] for row in rows))
+    # Business accounts use the "waimao" group. Public Stable points it at PROXY; a private layer may replace it.
+    waimao = policy["waimao"]["group"]
+    proxy_rows = [row for row in policy["sets"] if row["policy"] == "proxy"]
+    names = {}
+    for ipv4, keys in ((True, ("soho-core-ipv4", "soho-waimao-ipv4")),
+                       (False, ("soho-core-international", "soho-waimao-international"))):
+        for key, business in zip(keys, (False, True)):
+            rows = [row for row in proxy_rows
+                    if row["windows_ipv4_only"] == ipv4 and bool(row.get("waimao")) == business]
+            hosts = [value for row in rows for value in row["domains"]]
+            if not ipv4:
+                hosts.extend(policy["waimao"]["domains"] if business else policy["proxy_exceptions"])
+            providers[key] = {"type": "inline", "behavior": "domain", "payload": list(dict.fromkeys(hosts))}
+            names[ipv4, business] = [key, *(row["source"] for row in rows)]
+
+    def any_set(sources):
+        selectors = ["RULE-SET," + source for source in sources]
+        return selectors[0] if len(selectors) == 1 else logic("OR", *selectors)
 
     rules = [filter_rule(f"RULE-SET,{FILTERS[module]}", exceptions) for module, exceptions in filters.items()]
     rules.extend(f"RULE-SET,{row['source']},REJECT" for row in policy["sets"]
@@ -155,20 +165,32 @@ def windows(policy):
     package = "PROCESS-PATH-REGEX," + PACKAGE + r"[^\\]+\\"
     # The embedded browser shares ChatGPT.exe, so let that exact executable fall through to business routing.
     guarded = logic("OR", package, "PROCESS-NAME,ChatGPT.exe")
+    v4_proxy, v4_waimao = any_set(names[True, False]), any_set(names[True, True])
     rules += [
-        logic("AND", cli, protected[True], ipv4) + ",PROXY",
+        logic("AND", cli, v4_waimao, ipv4) + "," + waimao,
+        logic("AND", cli, v4_proxy, ipv4) + ",PROXY",
         logic("AND", guarded, logic("NOT", desktop)) + ",REJECT",
-        logic("AND", protected[True], ipv4) + ",PROXY",
-        protected[True] + ",REJECT",
+        logic("AND", v4_waimao, ipv4) + "," + waimao,
+        logic("AND", v4_proxy, ipv4) + ",PROXY",
+        any_set(names[True, False] + names[True, True]) + ",REJECT",
     ]
     rules += [domain_rule(host) + ",DIRECT" for host in policy["direct_exceptions"]]
-    rules += [protected[False] + ",PROXY", protected[False] + ",REJECT"]
+    # Listed business hosts first, then PROXY categories (YouTube before Google), then business categories.
+    business_hosts, *business_sets = names[False, True]
+    for selector, outcome in ((any_set([business_hosts]), waimao), (any_set(names[False, False]), "PROXY"),
+                              (any_set(business_sets), waimao)):
+        rules += [selector + "," + outcome, selector + ",REJECT"]
     rules.extend(telegram_ip_rules(policy, "soho-telegram-ip", ("PROXY", "REJECT")))
     for row in policy["sets"]:
         if row["policy"] == "proxy_category":
             rules.extend(f"RULE-SET,{row['source']},{action}" for action in ("PROXY", "REJECT"))
     for row in policy["sets"]:
         if row["policy"] == "direct":
+            if row["kind"] == "ipcidr":
+                # Match business AI categories by name before the China IP check resolves them locally.
+                for extra in policy["sets"]:
+                    if extra["policy"] == "waimao_supplement":
+                        rules += [f"RULE-SET,{extra['source']},{waimao}", f"RULE-SET,{extra['source']},REJECT"]
             # Resolve unmatched hosts so servers inside China stay direct before the proxy fallback.
             rules.append("RULE-SET," + row["source"] + ",DIRECT")
     for row in policy["sets"]:
@@ -187,6 +209,7 @@ def windows(policy):
              "include-all-providers": True, "exclude-type": "Direct|Compatible",
              "default-selected": "REJECT", "empty-fallback": "REJECT"},
             {"name": "GLOBAL", "type": "select", "proxies": ["PROXY"], "empty-fallback": "REJECT"},
+            {"name": waimao, "type": "select", "proxies": ["PROXY"]},
         ],
         "rule-providers": providers,
         "rules": rules,
@@ -237,7 +260,7 @@ def main():
     stable = ROOT / "dist/stable"
     generated = {
         "mihomo-merge.yaml": notice + url + "# Clash Verge Rev subscription-level Merge; install over your own profile.\n"
-                             + yaml.safe_dump(windows(policy), sort_keys=False, width=1000),
+                             + yaml.safe_dump(windows(policy), sort_keys=False, width=1000, allow_unicode=True),
         "shadowrocket.conf": notice + url + "# Baseline import, update and routing verified on two iPhones.\n" + shadowrocket(policy),
     }
     for name, body in generated.items():

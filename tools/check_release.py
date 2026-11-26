@@ -373,10 +373,12 @@ def check(files):
     merge = yaml.safe_load(files["dist/stable/mihomo-merge.yaml"])
     require(merge == windows(policy), "Mihomo differs from policy")
     require(set(merge) == {"find-process-mode", "proxy-groups", "rule-providers", "rules"}, "Unexpected Merge settings")
-    proxy, glob = merge["proxy-groups"]
+    proxy, glob, business = merge["proxy-groups"]
     require(proxy["name"] == "PROXY" and glob == {"name": "GLOBAL", "type": "select", "proxies": ["PROXY"], "empty-fallback": "REJECT"}
             and proxy["type"] == "select" and proxy["proxies"] == ["REJECT"] and proxy["empty-fallback"] == "REJECT"
-            and proxy["default-selected"] == "REJECT", "Unsafe selector")
+            and proxy["default-selected"] == "REJECT"
+            and business == {"name": policy["waimao"]["group"], "type": "select", "proxies": ["PROXY"]},
+            "Unsafe selector")
     providers = list(merge["rule-providers"].values())
     online = [provider for provider in providers if provider["type"] == "http"]
     community = community_providers(policy)
@@ -384,7 +386,7 @@ def check(files):
     expected_online = len(policy["sets"]) + len(community) + 1 - (len(FILTERS) - len(filters))
     approved_text = {HULU_JAPAN, f"{PAGES}/{COMMUNITY_GAMBLING}", f"{PAGES}/{TELEGRAM_IPS}",
                      *(url for _, url, _ in community)}
-    require(len(providers) == expected_online + 2 and len(online) == expected_online and
+    require(len(providers) == expected_online + 4 and len(online) == expected_online and
             all(row["url"].startswith("https://") and
                 (row["format"] == "mrs" or (row["url"] in approved_text and row["behavior"] == "classical"
                                             and row["format"] == "text")) and row["proxy"] == "PROXY"
