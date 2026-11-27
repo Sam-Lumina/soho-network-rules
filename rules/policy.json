@@ -100,16 +100,10 @@
       "waimao": true,
       "kind": "domain",
       "domains": [
-        "google.com",
-        "www.google.com",
-        "mail.google.com",
-        "accounts.google.com",
+        "+.google.com",
+        "+.googleapis.com",
+        "+.gstatic.com",
         "gemini.google",
-        "gemini.google.com",
-        "geminiweb-pa.clients.google.com",
-        "geminiweb-pa.clients6.google.com",
-        "aistudio.google.com",
-        "generativelanguage.googleapis.com",
         "+.gmail.com"
       ],
       "windows_ipv4_only": false,
@@ -121,9 +115,8 @@
       "waimao": true,
       "kind": "domain",
       "domains": [
-        "linkedin.com",
-        "www.linkedin.com",
-        "api.linkedin.com"
+        "+.linkedin.com",
+        "+.licdn.com"
       ],
       "windows_ipv4_only": false,
       "meta_path": "geo/geosite/linkedin.mrs"
@@ -134,10 +127,8 @@
       "waimao": true,
       "kind": "domain",
       "domains": [
-        "whatsapp.com",
-        "www.whatsapp.com",
-        "web.whatsapp.com",
-        "api.whatsapp.com"
+        "+.whatsapp.com",
+        "+.whatsapp.net"
       ],
       "windows_ipv4_only": false,
       "meta_path": "geo/geosite/whatsapp.mrs"
@@ -148,10 +139,8 @@
       "waimao": true,
       "kind": "domain",
       "domains": [
-        "claude.ai",
-        "www.claude.ai",
-        "console.anthropic.com",
-        "api.anthropic.com"
+        "+.claude.ai",
+        "+.anthropic.com"
       ],
       "windows_ipv4_only": false,
       "meta_path": "geo/geosite/anthropic.mrs"
@@ -391,7 +380,9 @@
   "threat_exceptions": [],
   "waimao": {
     "group": "外贸",
-    "domains": ["+.perplexity.ai", "+.perplexity.com", "+.pplx.ai"]
+    "domains": ["+.perplexity.ai", "+.perplexity.com", "+.pplx.ai",
+                "+.quick.aws", "+.plato.ai.aws.dev", "+.awsapps.com", "oidc.us-east-1.amazonaws.com",
+                "identitycenter.amazonaws.com", "portal.sso.us-east-1.amazonaws.com"]
   },
   "fallback": "DIRECT",
   "windows_fallback": "PROXY",

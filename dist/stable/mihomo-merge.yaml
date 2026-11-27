@@ -430,28 +430,17 @@ rule-providers:
     type: inline
     behavior: domain
     payload:
-    - google.com
-    - www.google.com
-    - mail.google.com
-    - accounts.google.com
+    - +.google.com
+    - +.googleapis.com
+    - +.gstatic.com
     - gemini.google
-    - gemini.google.com
-    - geminiweb-pa.clients.google.com
-    - geminiweb-pa.clients6.google.com
-    - aistudio.google.com
-    - generativelanguage.googleapis.com
     - +.gmail.com
-    - linkedin.com
-    - www.linkedin.com
-    - api.linkedin.com
-    - whatsapp.com
-    - www.whatsapp.com
-    - web.whatsapp.com
-    - api.whatsapp.com
-    - claude.ai
-    - www.claude.ai
-    - console.anthropic.com
-    - api.anthropic.com
+    - +.linkedin.com
+    - +.licdn.com
+    - +.whatsapp.com
+    - +.whatsapp.net
+    - +.claude.ai
+    - +.anthropic.com
     - grok.com
     - www.grok.com
     - grok.x.com
@@ -459,6 +448,12 @@ rule-providers:
     - +.perplexity.ai
     - +.perplexity.com
     - +.pplx.ai
+    - +.quick.aws
+    - +.plato.ai.aws.dev
+    - +.awsapps.com
+    - oidc.us-east-1.amazonaws.com
+    - identitycenter.amazonaws.com
+    - portal.sso.us-east-1.amazonaws.com
 rules:
 - RULE-SET,soho-threat,REJECT
 - RULE-SET,soho-ads,REJECT
