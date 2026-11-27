@@ -97,8 +97,9 @@ def category_key(label):
 
 
 def reviewed_routes(policy):
+    # 外贸 sets resolve to PROXY when the group is empty, so compare them as proxied categories.
     actions = {"direct": "DIRECT", "proxy": "PROXY", "proxy_supplement": "PROXY",
-               "proxy_category": "PROXY", "reject": "REJECT"}
+               "proxy_category": "PROXY", "waimao_supplement": "PROXY", "reject": "REJECT"}
     routes = {}
     for entry in policy["sets"]:
         if entry["kind"] == "advertising" and not policy["modules"]["ads"]["enabled"]:
