@@ -8,6 +8,7 @@ from hashlib import sha256
 from ipaddress import ip_address, ip_network
 from itertools import product
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -17,7 +18,7 @@ import yaml
 
 from build_configs import (
     ACL, HAGEZI, META, PAGES, COMMUNITY_DATA, COMMUNITY_MEDIA, COMMUNITY_ADULT, COMMUNITY_GAMBLING,
-    COMMUNITY_DIRECT, COMMUNITY_PROXY, TELEGRAM_IPS, FILTERS, community_providers, data_url,
+    COMMUNITY_DIRECT, COMMUNITY_PROXY, TELEGRAM_IPS, FILTERS, community_providers, data_url, domain_rule,
     filter_rule, filter_settings, ip_rule, shadowrocket, telegram_ip_rules, threat_source, windows,
 )
 
@@ -33,7 +34,7 @@ ASSETS = {
     "LICENSE", "THIRD_PARTY_NOTICES.md", "SOURCE.md", "SHA256.json",
     "tif-mini.mrs", "meta-ads.list", "meta-international.list",
 }
-CONFIGS = {"dist/stable/mihomo-merge.yaml", "dist/stable/shadowrocket.conf"}
+CONFIGS = {"dist/stable/mihomo-merge.yaml", "dist/stable/shadowrocket.conf", "dist/stable/shadowrocket-waimao.conf"}
 COMMUNITY_LISTS = (COMMUNITY_MEDIA, COMMUNITY_ADULT, COMMUNITY_GAMBLING, COMMUNITY_PROXY, COMMUNITY_DIRECT)
 COMMUNITY_FILES = {f"dist/{path}" for path in (*COMMUNITY_LISTS, TELEGRAM_IPS, f"{COMMUNITY_DATA}/SOURCE.md",
                                                f"{COMMUNITY_DATA}/SHA256.json")}
@@ -47,9 +48,19 @@ MIT_NOTICE_SHA256 = {
 HOSTS = {
     "github.com", "api.github.com", "raw.githubusercontent.com", "sam-lumina.github.io", "polyformproject.org",
     "www.gnu.org", "gnu.org", "fsf.org", "www.fsf.org", "www.clashverge.dev", "apps.apple.com",
-    "wiki.metacubex.one", "docs.github.com", "example.com", "core.telegram.org",
+    "wiki.metacubex.one", "docs.github.com", "example.com", "core.telegram.org", "www.gstatic.com",
 }
-SENSITIVE_FIELDS = r"password|passwd|token|client[_-]?secret|secret|authorization|api[_-]?key|private[_-]?key|uuid|cookie|short[_-]?id"
+SENSITIVE_FIELDS = (r"password|passwd|token|client[_-]?secret|secret|authorization|api[_-]?key|private[_-]?key|uuid|cookie"
+                    r"|short[_-]?id|public[_-]?key|pbk|sid|reality[_-]?opts")
+# Literal addresses the checker itself uses as routing samples. Everything else must be a CIDR.
+SAMPLE_ADDRESSES = {"149.154.167.41", "149.154.175.50", "95.161.76.101", "194.221.250.50", "2001:b28:f23d:f001::a",
+                    "192.0.2.1"}
+DOCUMENTATION = tuple(ip_network(row) for row in ("192.0.2.0/24", "198.51.100.0/24", "203.0.113.0/24", "2001:db8::/32"))
+IPV4 = re.compile(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?!\w|\.\w|/\d)")
+IPV6 = re.compile(r"(?<![\w:.])(?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}(?![\w:]|/\d)", re.I)
+# Local-only list of exact values (server address, keys, IDs, personal domains) that must never be published.
+# One value per line; the file lives outside the repository and CI runs without it.
+PRIVATE_VALUES = Path(os.environ.get("SOHO_PRIVATE_VALUES") or Path.home() / ".soho-private" / "release-denylist.txt")
 SENSITIVE_PARAM = re.compile(rf"(?:^|[_-])(?:key|auth|{SENSITIVE_FIELDS})(?:$|[_-])", re.I)
 PATTERNS = {
     "proxy share URI": re.compile(r"\b(?:ss|ssr|vless|vmess|trojan|hysteria2?|hy2|tuic|wireguard|socks5?)://", re.I),
@@ -92,10 +103,33 @@ def inventory(staged):
                 yield relative.as_posix(), path.read_bytes()
 
 
+def private_values():
+    if not PRIVATE_VALUES.is_file():
+        return ()
+    rows = PRIVATE_VALUES.read_text(encoding="utf-8").splitlines()
+    return tuple(row.strip() for row in rows if len(row.strip()) >= 6 and not row.lstrip().startswith("#"))
+
+
+def ip_literals(body):
+    for pattern in (IPV4, IPV6):
+        for value in pattern.findall(body):
+            try:
+                address = ip_address(value)
+            except ValueError:
+                continue
+            if str(address) not in SAMPLE_ADDRESSES and not any(
+                    address.version == net.version and address in net for net in DOCUMENTATION):
+                yield value
+
+
 def content_findings(body):
     for name, pattern in PATTERNS.items():
         if pattern.search(body):
             yield name
+    if any(ip_literals(body)):
+        yield "bare IP address"
+    if any(value.lower() in body.lower() for value in private_values()):
+        yield "private value"
     for address in URL.findall(body):
         try:
             parsed = urlsplit(address.rstrip(".,;"))
@@ -301,6 +335,48 @@ def shadowrocket_check(files, directory, policy):
                 "Gambling must reject overlapping categories and their subdomains")
 
 
+def waimao_check(files, policy):
+    """The trade variant must equal the baseline except for the group sections and retargeted business rows."""
+    group = policy["waimao"]["group"]
+    raw = files["dist/stable/shadowrocket-waimao.conf"].decode()
+    lines = [line for line in raw.splitlines() if line and not line.startswith("#")]
+    require(lines == shadowrocket(policy, waimao=True).splitlines(), "Shadowrocket trade variant differs from policy")
+    base = shadowrocket(policy).splitlines()
+    start = lines.index("[Rule]")
+    head, rules = lines[:start], lines[start:]
+    test = "url=https://www.gstatic.com/generate_204,timeout=5"
+    require(head[:3] == ["[General]", "close-if-proxy-chain-missing = true", "[Proxy Group]"]
+            and head[3] == f"{group} = fallback,{group}-直连,{group}-中转,interval=60,{test}"
+            and len(head) == 5 and head[4].startswith(f"{group}中转池 = fallback,policy-regex-filter=")
+            # fallback, filter, interval, url, timeout: four commas, so the filter itself holds none.
+            and head[4].endswith(f",interval=300,{test}") and head[4].count(",") == 4,
+            "Unexpected trade variant groups")
+    # No node may ship in the public file: the trade nodes are added on each device.
+    require(not any(line.startswith("[") and line not in ("[General]", "[Proxy Group]", "[Rule]") for line in lines),
+            "Unexpected section in trade variant")
+    business = {host for row in policy["sets"] if row["policy"] == "proxy" and row.get("waimao")
+                for host in row["domains"]}
+    extra = [line for line in rules if line not in base]
+    require(extra == [line for line in rules if line.endswith("," + group)]
+            and all(line.rsplit(",", 1)[0].split(",", 1)[1] in {*(h.removeprefix("+.") for h in business),
+                                                               *(h.removeprefix("+.") for h in policy["waimao"]["domains"])}
+                    for line in extra), "Trade variant retargets an unlisted host")
+    # Pointing the group back at PROXY and dropping the trade-only hosts must give the baseline exactly.
+    trade_only = {domain_rule(host) + "," + group for host in policy["waimao"]["domains"]}
+    require([line.removesuffix("," + group) + ",PROXY" if line.endswith("," + group) else line
+             for line in rules if line not in trade_only] == base,
+            "Trade variant changed a non-business route")
+    require(rules[-1] == "FINAL,DIRECT" and "DOMAIN-SUFFIX,github.com,PROXY" in rules
+            and "DOMAIN,www.youtube.com,PROXY" in rules and "DOMAIN,web.telegram.org,PROXY" in rules,
+            "Trade variant must keep GitHub, YouTube and Telegram on PROXY and the direct fallback")
+    for host in ("chatgpt.com", "api.openai.com", "claude.ai", "www.linkedin.com", "web.whatsapp.com",
+                 "mail.google.com", "gemini.google.com", "www.perplexity.ai", "grok.com"):
+        first = next(line for line in rules[1:] if (lambda kind, item: host == item or (
+            kind == "DOMAIN-SUFFIX" and host.endswith("." + item)))(*line.split(",")[:2])
+            and line.split(",")[0] in {"DOMAIN", "DOMAIN-SUFFIX"})
+        require(first.endswith("," + group), f"Trade sample not routed to the group: {host}")
+
+
 def filter_check(policy):
     candidate = deepcopy(policy)
     candidate["ad_exceptions"] = ["github.com", "+.example.com"]
@@ -418,6 +494,7 @@ def check(files):
     require(rules[-1-len(tail):-1] == tail,
             "Additional categories must follow existing routes and reject unmatched proxy transport")
     shadowrocket_check(files, directory, policy)
+    waimao_check(files, policy)
     filter_check(policy)
     print(f"Checked {len(files)} approved files, license texts, providers and Shadowrocket sample routes.")
 

@@ -216,7 +216,27 @@ def windows(policy):
     }
 
 
-def shadowrocket(policy):
+# Trade-group variant only: relay pool picks the subscription's HK/JP nodes, minus the ones that bill extra,
+# IPv6-only, backup or info entries, and the device's own trade nodes. No commas: Shadowrocket splits on them.
+RELAY_FILTER = r"^(?=.*(香港|日本))(?!.*(1\.5X|家宽|V6|备用|剩余|到期|官网|邮箱|外贸)).*$"
+
+
+def shadowrocket_groups(policy):
+    """Sections for the trade-group variant. The two trade nodes are added by hand on each device."""
+    group = policy["waimao"]["group"]
+    test = "url=https://www.gstatic.com/generate_204,timeout=5"
+    return "\n".join([
+        "[General]",
+        "close-if-proxy-chain-missing = true",
+        "[Proxy Group]",
+        f"{group} = fallback,{group}-直连,{group}-中转,interval=60,{test}",
+        f"{group}中转池 = fallback,policy-regex-filter={RELAY_FILTER},interval=300,{test}",
+    ]) + "\n"
+
+
+def shadowrocket(policy, waimao=False):
+    """waimao=True keeps every rule and only retargets business rows (plus the listed trade hosts) at the group."""
+    business = policy["waimao"]["group"] if waimao else "PROXY"
     rows = [row for row in policy["sets"] if row["policy"] == "proxy"]
     selectors = {"threat": "DOMAIN-SET," + threat_source(policy),
                  "ads": "RULE-SET," + data_url(policy, "meta-ads.list")}
@@ -228,8 +248,10 @@ def shadowrocket(policy):
     for ipv4_only in (True, False):
         if not ipv4_only:
             rules.extend(domain_rule(host) + ",DIRECT" for host in policy["direct_exceptions"])
-        rules.extend(domain_rule(host) + ",PROXY" for row in rows if row["windows_ipv4_only"] == ipv4_only
-                     for host in row["domains"])
+        rules.extend(domain_rule(host) + "," + (business if row.get("waimao") else "PROXY")
+                     for row in rows if row["windows_ipv4_only"] == ipv4_only for host in row["domains"])
+    if waimao:
+        rules.extend(domain_rule(host) + "," + business for host in policy["waimao"]["domains"])
     rules.extend(domain_rule(host) + ",PROXY" for host in policy["proxy_exceptions"])
     rules += [
         "RULE-SET," + data_url(policy, "meta-international.list") + ",PROXY",
@@ -247,7 +269,7 @@ def shadowrocket(policy):
                  for row in policy["sets"] for url in row.get("shadowrocket_urls", ()))
     rules.extend(f"RULE-SET,{url},{outcome}" for _, url, outcome in community_providers(policy))
     rules.append("FINAL," + policy["fallback"])
-    return "\n".join(rules) + "\n"
+    return (shadowrocket_groups(policy) if waimao else "") + "\n".join(rules) + "\n"
 
 
 def main():
@@ -262,6 +284,8 @@ def main():
         "mihomo-merge.yaml": notice + url + "# Clash Verge Rev subscription-level Merge; install over your own profile.\n"
                              + yaml.safe_dump(windows(policy), sort_keys=False, width=1000, allow_unicode=True),
         "shadowrocket.conf": notice + url + "# Baseline import, update and routing verified on two iPhones.\n" + shadowrocket(policy),
+        "shadowrocket-waimao.conf": notice + url + "# Trade-group variant. Add your own nodes named 外贸-直连 and 外贸-中转 on the device.\n"
+                                    + shadowrocket(policy, waimao=True),
     }
     for name, body in generated.items():
         path = stable / name

@@ -52,7 +52,7 @@ jobs:
         run: |
           if [ "$DATA_ONLY" = "true" ]; then
             base="https://sam-lumina.github.io/soho-network-rules"
-            for name in mihomo-merge.yaml shadowrocket.conf; do
+            for name in mihomo-merge.yaml shadowrocket.conf shadowrocket-waimao.conf; do
               curl --fail --silent --show-error --proto '=https' -H 'Cache-Control: no-cache' "$base/stable/$name" -o "$RUNNER_TEMP/$name"
               if ! cmp --silent "$RUNNER_TEMP/$name" "dist/stable/$name"; then
                 echo "Stable has a different reviewed configuration. Waiting for manual release."
