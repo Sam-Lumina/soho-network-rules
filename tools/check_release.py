@@ -306,7 +306,9 @@ def shadowrocket_check(files, directory, policy):
                   "coderabbit.gallery.vsassets.io", "dash.cloudflare.com", "platform.dash.cloudflare.com",
                   "api.cloudflare.com", "brunhild.challenges.cloudflare.com", "a.nel.cloudflare.com",
                   "static.cloudflareinsights.com", "sample.pages.dev", "sample.workers.dev",
-                  "sample.r2.dev", "sample.trycloudflare.com", "cloudflarechina.cn"),
+                  "sample.r2.dev", "sample.trycloudflare.com", "cloudflarechina.cn", "youtubei.googleapis.com",
+                  "i.ytimg.com", "music.youtube.com", "yt3.ggpht.com", "dl.google.com", "dl.l.google.com",
+                  "storage.googleapis.com"),
         "DIRECT": ("www.baidu.com", "www.taobao.com", "fe2cr.update.microsoft.com", "licdn.cn.cdn20.com",
                    "www.bilibili.com", "www.douyin.com", "www.icbc.com.cn", "store.steampowered.com",
                    "www.epicgames.com", "soho-test.invalid", "moonshot.cn", "copilot.com",
@@ -367,7 +369,7 @@ def waimao_check(files, policy):
              for line in rules if line not in trade_only] == base,
             "Trade variant changed a non-business route")
     require(rules[-1] == "FINAL,DIRECT" and "DOMAIN-SUFFIX,github.com,PROXY" in rules
-            and "DOMAIN,www.youtube.com,PROXY" in rules and "DOMAIN,web.telegram.org,PROXY" in rules,
+            and "DOMAIN-SUFFIX,youtube.com,PROXY" in rules and "DOMAIN,web.telegram.org,PROXY" in rules,
             "Trade variant must keep GitHub, YouTube and Telegram on PROXY and the direct fallback")
     for host in ("chatgpt.com", "api.openai.com", "claude.ai", "www.linkedin.com", "web.whatsapp.com",
                  "mail.google.com", "gemini.google.com", "www.perplexity.ai", "grok.com"):
@@ -375,6 +377,14 @@ def waimao_check(files, policy):
             kind == "DOMAIN-SUFFIX" and host.endswith("." + item)))(*line.split(",")[:2])
             and line.split(",")[0] in {"DOMAIN", "DOMAIN-SUFFIX"})
         require(first.endswith("," + group), f"Trade sample not routed to the group: {host}")
+    for host, outcome in (("us-east-1.quick.aws", group), ("mail.google.com", group),
+                          ("youtubei.googleapis.com", "PROXY"), ("i.ytimg.com", "PROXY"),
+                          ("www.youtube.com", "PROXY"), ("dl.google.com", "PROXY"),
+                          ("storage.googleapis.com", "PROXY")):
+        first = next(line for line in rules[1:] if line.split(",")[0] in {"DOMAIN", "DOMAIN-SUFFIX"}
+                     and (lambda kind, item: host == item or (kind == "DOMAIN-SUFFIX" and host.endswith("." + item)))(
+                         *line.split(",")[:2]))
+        require(first.endswith("," + outcome), f"Trade variant first match for {host} must be {outcome}")
 
 
 def filter_check(policy):
@@ -493,6 +503,18 @@ def check(files):
             tail.append(f"RULE-SET,{name},REJECT")
     require(rules[-1-len(tail):-1] == tail,
             "Additional categories must follow existing routes and reject unmatched proxy transport")
+    # Narrow before broad: YouTube and listed PROXY hosts precede the business suffixes (+.googleapis.com,
+    # +.google.com); business rows match by name only, since the trade exit is IPv4-only server-side.
+    group = policy["waimao"]["group"]
+    early = rules.index("OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube)),PROXY")
+    require(early < rules.index("RULE-SET,soho-waimao-international," + group)
+            < next(i for i, row in enumerate(rules) if "RULE-SET,soho-google" in row and row.endswith("," + group)),
+            "YouTube and listed PROXY hosts must precede business routing")
+    hosts = merge["rule-providers"]["soho-core-international"]["payload"]
+    require(all(host in hosts for host in ("dl.google.com", "dl.l.google.com", "storage.googleapis.com")),
+            "Large Google downloads must stay on PROXY")
+    require(not any(row.endswith("," + group) and "0.0.0.0/0" in row for row in rules),
+            "Business rows must not force a local IPv4 lookup")
     shadowrocket_check(files, directory, policy)
     waimao_check(files, policy)
     filter_check(policy)

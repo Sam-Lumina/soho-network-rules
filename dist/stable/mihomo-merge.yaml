@@ -327,8 +327,13 @@ rule-providers:
     type: inline
     behavior: domain
     payload:
-    - youtube.com
-    - www.youtube.com
+    - +.youtube.com
+    - +.ytimg.com
+    - +.ggpht.com
+    - youtubei.googleapis.com
+    - youtube.googleapis.com
+    - wide-youtube.l.google.com
+    - youtube-ui.l.google.com
     - youtu.be
     - +.googlevideo.com
     - telegram.org
@@ -426,6 +431,9 @@ rule-providers:
     - +.videodelivery.net
     - +.warp.plus
     - +.workers.dev
+    - dl.google.com
+    - dl.l.google.com
+    - storage.googleapis.com
   soho-waimao-international:
     type: inline
     behavior: domain
@@ -458,10 +466,10 @@ rules:
 - RULE-SET,soho-threat,REJECT
 - RULE-SET,soho-ads,REJECT
 - RULE-SET,soho-gambling,REJECT
-- AND,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\resources\\codex\.exe$),(OR,((RULE-SET,soho-waimao-ipv4),(RULE-SET,soho-openai))),(IP-CIDR,0.0.0.0/0)),外贸
+- AND,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\resources\\codex\.exe$),(OR,((RULE-SET,soho-waimao-ipv4),(RULE-SET,soho-openai)))),外贸
 - AND,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\resources\\codex\.exe$),(OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
 - AND,((OR,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[^\\]+\\),(PROCESS-NAME,ChatGPT.exe))),(NOT,((PROCESS-PATH-REGEX,(?i)^C:\\Program Files\\WindowsApps\\OpenAI\.Codex_[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_x64__2p2nqsd0c76g0\\app\\ChatGPT\.exe$)))),REJECT
-- AND,((OR,((RULE-SET,soho-waimao-ipv4),(RULE-SET,soho-openai))),(IP-CIDR,0.0.0.0/0)),外贸
+- OR,((RULE-SET,soho-waimao-ipv4),(RULE-SET,soho-openai)),外贸
 - AND,((OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-github))),(IP-CIDR,0.0.0.0/0)),PROXY
 - OR,((RULE-SET,soho-core-ipv4),(RULE-SET,soho-github),(RULE-SET,soho-waimao-ipv4),(RULE-SET,soho-openai)),REJECT
 - DOMAIN,licdn.cn.cdn20.com,DIRECT
@@ -471,10 +479,12 @@ rules:
 - DOMAIN-SUFFIX,copilot.com,DIRECT
 - DOMAIN-SUFFIX,copilot.cloud.microsoft,DIRECT
 - DOMAIN-SUFFIX,copilot-stg.com,DIRECT
+- OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube)),PROXY
+- OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube)),REJECT
 - RULE-SET,soho-waimao-international,外贸
 - RULE-SET,soho-waimao-international,REJECT
-- OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube),(RULE-SET,soho-telegram),(RULE-SET,soho-twitter)),PROXY
-- OR,((RULE-SET,soho-core-international),(RULE-SET,soho-youtube),(RULE-SET,soho-telegram),(RULE-SET,soho-twitter)),REJECT
+- OR,((RULE-SET,soho-telegram),(RULE-SET,soho-twitter)),PROXY
+- OR,((RULE-SET,soho-telegram),(RULE-SET,soho-twitter)),REJECT
 - OR,((RULE-SET,soho-google),(RULE-SET,soho-linkedin),(RULE-SET,soho-whatsapp),(RULE-SET,soho-anthropic),(RULE-SET,soho-xai)),外贸
 - OR,((RULE-SET,soho-google),(RULE-SET,soho-linkedin),(RULE-SET,soho-whatsapp),(RULE-SET,soho-anthropic),(RULE-SET,soho-xai)),REJECT
 - RULE-SET,soho-telegram-ip,PROXY,no-resolve
@@ -509,7 +519,7 @@ rules:
 - RULE-SET,soho-adult,REJECT
 - RULE-SET,soho-microsoft,DIRECT
 - RULE-SET,soho-cn,DIRECT
-- RULE-SET,soho-community-ai,外贸
+- RULE-SET,soho-community-ai,PROXY
 - RULE-SET,soho-community-ai,REJECT
 - RULE-SET,soho-geoip-cn,DIRECT
 - RULE-SET,soho-meta,PROXY

@@ -59,12 +59,18 @@
       "policy": "proxy",
       "kind": "domain",
       "domains": [
-        "youtube.com",
-        "www.youtube.com",
+        "+.youtube.com",
+        "+.ytimg.com",
+        "+.ggpht.com",
+        "youtubei.googleapis.com",
+        "youtube.googleapis.com",
+        "wide-youtube.l.google.com",
+        "youtube-ui.l.google.com",
         "youtu.be",
         "+.googlevideo.com"
       ],
       "windows_ipv4_only": false,
+      "before_waimao": true,
       "meta_path": "geo/geosite/youtube.mrs"
     },
     {
@@ -185,7 +191,7 @@
     },
     {
       "source": "soho-community-ai",
-      "policy": "waimao_supplement",
+      "policy": "proxy_before_geoip",
       "kind": "domain",
       "domains": [],
       "windows_ipv4_only": false,
@@ -369,7 +375,10 @@
     "+.trycloudflare.com",
     "+.videodelivery.net",
     "+.warp.plus",
-    "+.workers.dev"
+    "+.workers.dev",
+    "dl.google.com",
+    "dl.l.google.com",
+    "storage.googleapis.com"
   ],
   "modules": {
     "ads": {"enabled": true},
