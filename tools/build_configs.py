@@ -216,11 +216,6 @@ def windows(policy):
     }
 
 
-# Trade-group variant only: relay pool picks the subscription's HK/JP nodes, minus the ones that bill extra,
-# IPv6-only, backup or info entries, and the device's own trade nodes. No commas: Shadowrocket splits on them.
-RELAY_FILTER = r"^(?=.*(香港|日本))(?!.*(1\.5X|家宽|V6|备用|剩余|到期|官网|邮箱|外贸)).*$"
-
-
 def shadowrocket_groups(policy):
     """Sections for the trade-group variant. The two trade nodes are added by hand on each device."""
     group = policy["waimao"]["group"]
@@ -230,7 +225,6 @@ def shadowrocket_groups(policy):
         "close-if-proxy-chain-missing = true",
         "[Proxy Group]",
         f"{group} = fallback,{group}-直连,{group}-中转,interval=60,{test}",
-        f"{group}中转池 = fallback,policy-regex-filter={RELAY_FILTER},interval=300,{test}",
     ]) + "\n"
 
 

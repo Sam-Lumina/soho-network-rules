@@ -346,10 +346,10 @@ def waimao_check(files, policy):
     head, rules = lines[:start], lines[start:]
     test = "url=https://www.gstatic.com/generate_204,timeout=5"
     require(head[:3] == ["[General]", "close-if-proxy-chain-missing = true", "[Proxy Group]"]
+            # Only the 外贸 group ships: Shadowrocket's proxy chain cannot point at a group, so each device
+            # sets 外贸-中转's chain to a concrete HK/JP node by hand.
             and head[3] == f"{group} = fallback,{group}-直连,{group}-中转,interval=60,{test}"
-            and len(head) == 5 and head[4].startswith(f"{group}中转池 = fallback,policy-regex-filter=")
-            # fallback, filter, interval, url, timeout: four commas, so the filter itself holds none.
-            and head[4].endswith(f",interval=300,{test}") and head[4].count(",") == 4,
+            and len(head) == 4,
             "Unexpected trade variant groups")
     # No node may ship in the public file: the trade nodes are added on each device.
     require(not any(line.startswith("[") and line not in ("[General]", "[Proxy Group]", "[Rule]") for line in lines),
